@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "28992864864",
+    "project_id": "ocalanow",
+    "storage_bucket": "ocalanow.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:28992864864:android:8f68682ada31fca8a43905",
+        "android_client_info": {
+          "package_name": "com.ocalanow"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "28992864864-q9tpe5akt1t1vaimq98fb8rm3fmmoaou.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ocalanow",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "28992864864-1unij7fj1jq5jdlapibrr2k9ecdfo4f8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC1zDr6l3806OVa4HiBZPw1ra0iIaoruRE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "28992864864-1unij7fj1jq5jdlapibrr2k9ecdfo4f8.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "28992864864-csugr25ribb0pe17e5fnvv9imr78fc6g.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.OcalaNow",
+                "app_store_id": "1566738476"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

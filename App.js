@@ -6,87 +6,84 @@
  * @flow strict-local
  */
 
-import React from 'react';
 import type {Node} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
-
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
-
-const Section = ({children, title}): Node => {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-};
+import React, {useEffect, useState} from 'react';
+import {StyleSheet} from 'react-native';
+import {NavigationContainer} from '@react-navigation/native';
+import {NativeBaseProvider} from 'native-base/src/core/NativeBaseProvider';
+import {appTheme} from './Theme';
+import {useMMKV, useMMKVObject} from 'react-native-mmkv';
+import {AppContext} from './AppContext';
+import Auth from '@react-native-firebase/auth';
+import SplashScreen from './Routes/SplashScreen';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import SignIn from './Routes/SignIn';
+import TabNavigator from './Routes/TabNavigator';
 
 const App: () => Node = () => {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+  const userStorage = useMMKV();
+  const [user, setUser] = useMMKVObject('user', userStorage);
+  const [authCredential, setAuthCredential] = useState();
+  const [initializing, setInitializing] = useState(true);
+  const context = {
+    user,
+    setUser,
   };
-
+  const onAuthStateChanged = authUser => {
+    if (authUser) {
+      setAuthCredential(authUser);
+      if (initializing) {
+        setInitializing(false);
+      }
+    } else {
+      setAuthCredential(null);
+      if (initializing) {
+        setInitializing(false);
+      }
+    }
+  };
+  useEffect(() => {
+    const authSubscriber = Auth().onAuthStateChanged(onAuthStateChanged);
+    return authSubscriber;
+  }, []);
+  if (initializing) {
+    return (
+      <NativeBaseProvider theme={appTheme}>
+        <SplashScreen />
+      </NativeBaseProvider>
+    );
+  }
+  const forFade = ({current}) => ({
+    cardStyle: {
+      opacity: current.progress,
+    },
+  });
+  const Stack = createNativeStackNavigator();
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.js</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+    <AppContext.Provider value={context}>
+      <NativeBaseProvider theme={appTheme}>
+        <NavigationContainer>
+          <Stack.Navigator>
+            {authCredential === null ? (
+              <Stack.Screen
+                name="SignIn"
+                component={SignIn}
+                options={{
+                  title: 'Sign in',
+                  animation: 'fade',
+                }}
+              />
+            ) : (
+              <Stack.Screen
+                name="TabNavigator"
+                options={{animation: 'fade'}}
+                component={TabNavigator}
+              />
+            )}
+          </Stack.Navigator>
+        </NavigationContainer>
+      </NativeBaseProvider>
+    </AppContext.Provider>
   );
 };
 
