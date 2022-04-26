@@ -7,8 +7,8 @@ export const appTheme = extendTheme({
       100: '#fee7af',
       200: '#fbd781',
       300: '#f8c751',
-      400: '#f6b723',
-      500: '#fcba03',
+      400: '#F5AF0A',
+      500: '#F5AF0A',
       600: '#ac7a03',
       700: '#7c5800',
       800: '#4b3500',
@@ -37,6 +37,23 @@ export const appTheme = extendTheme({
       700: '#404040',
       800: '#262626',
       900: '#0d0d0d',
+    },
+  },
+  components: {
+    Button: {
+      variants: {
+        solid: {
+          backgroundColor: 'primary.500',
+          pt: 2,
+          pb: 2,
+          my: 3,
+          rounded: 'xl',
+          _text: {fontWeight: 500},
+        },
+        subtle: {
+          _text: {fontWeight: 200, fontSize: 'sm'},
+        },
+      },
     },
   },
 });

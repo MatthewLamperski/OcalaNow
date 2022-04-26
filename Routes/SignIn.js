@@ -21,6 +21,7 @@ const SignIn = () => {
       style={{justifyContent: 'center', alignItems: 'center', flex: 1}}>
       <ScrollView>
         <Button
+          colorScheme="primary"
           onPress={() => {
             signIn();
           }}>

@@ -69,7 +69,7 @@ const App: () => Node = () => {
                 name="SignIn"
                 component={SignIn}
                 options={{
-                  title: 'Sign in',
+                  header: () => null,
                   animation: 'fade',
                 }}
               />
