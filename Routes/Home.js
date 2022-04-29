@@ -23,11 +23,15 @@ const Home = () => {
   );
   return (
     <View
-      pt={top}
-      bg="dark.500"
+      pt={2}
       style={{justifyContent: 'center', alignItems: 'center', flex: 1}}>
       <ScrollView>
         <Text>Home Tab</Text>
+        <Text fontSize="xs">Extra Small</Text>
+        <Text fontSize="sm">Small</Text>
+        <Text fontSize="md">Medium</Text>
+        <Text fontSize="lg">Large</Text>
+        <Text fontSize="xl">Extra Large</Text>
         <Text>{JSON.stringify(user, null, 2)}</Text>
         <Button
           my={2}

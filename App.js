@@ -17,8 +17,8 @@ import {AppContext} from './AppContext';
 import Auth from '@react-native-firebase/auth';
 import SplashScreen from './Routes/SplashScreen';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import SignIn from './Routes/SignIn';
 import TabNavigator from './Routes/TabNavigator';
+import AuthStack from './Routes/AuthStack/AuthStack';
 
 const App: () => Node = () => {
   const userStorage = useMMKV();
@@ -66,8 +66,8 @@ const App: () => Node = () => {
           <Stack.Navigator>
             {authCredential === null ? (
               <Stack.Screen
-                name="SignIn"
-                component={SignIn}
+                name="AuthStack"
+                component={AuthStack}
                 options={{
                   header: () => null,
                   animation: 'fade',

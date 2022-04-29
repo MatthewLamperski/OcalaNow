@@ -1,5 +1,29 @@
 import firestore from '@react-native-firebase/firestore';
 import storage from '@react-native-firebase/storage';
+import auth from '@react-native-firebase/auth';
+
+// Authentication Functions
+export const signInWithEmail = (email, password) => {
+  return new Promise((resolve, reject) => {
+    auth()
+      .signInWithEmailAndPassword(email, password)
+      .then(userRef => {
+        resolve(userRef);
+      })
+      .catch(err => {
+        reject(err);
+      });
+  });
+};
+
+export const signUpWithEmail = (email, password) => {
+  return new Promise((resolve, reject) => {
+    auth()
+      .createUserWithEmailAndPassword(email, password)
+      .then(cred => resolve(cred))
+      .catch(err => reject(err));
+  });
+};
 
 export const getCompanies = () => {
   return new Promise((resolve, reject) => {

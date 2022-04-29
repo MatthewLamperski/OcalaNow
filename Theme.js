@@ -1,4 +1,4 @@
-import {extendTheme} from 'native-base';
+import {extendTheme, themeTools} from 'native-base';
 
 export const appTheme = extendTheme({
   colors: {
@@ -7,7 +7,7 @@ export const appTheme = extendTheme({
       100: '#fee7af',
       200: '#fbd781',
       300: '#f8c751',
-      400: '#F5AF0A',
+      400: '#f8c70c',
       500: '#F5AF0A',
       600: '#ac7a03',
       700: '#7c5800',
@@ -26,34 +26,136 @@ export const appTheme = extendTheme({
       800: '#004150',
       900: '#00171f',
     },
-    light: {
-      50: '#f2f2f2',
-      100: '#d9d9d9',
-      200: '#bfbfbf',
-      300: '#a6a6a6',
-      400: '#8c8c8c',
-      500: '#737373',
-      600: '#595959',
-      700: '#404040',
-      800: '#262626',
-      900: '#0d0d0d',
+    background: {
+      50: '#eceff1',
+      100: '#cfd8dc',
+      200: '#b0bec5',
+      300: '#90a4ae',
+      400: '#78909c',
+      500: '#607d8b',
+      600: '#546e7a',
+      700: '#455a64',
+      800: '#37474f',
+      900: '#263238',
     },
   },
   components: {
+    View: {
+      baseStyle: (props: any) => {
+        return {
+          backgroundColor: themeTools.mode('muted.100', 'muted.800')(props),
+        };
+      },
+    },
+    Text: {
+      baseStyle: (props: any) => {
+        return {
+          color: themeTools.mode('red.300', 'red.100')(props),
+          fontWeight: 100,
+        };
+      },
+    },
     Button: {
+      defaultProps: {
+        p: 4,
+        m: 3,
+        shadow: 1,
+        _text: {
+          fontWeight: 300,
+          fontSize: 'md',
+        },
+      },
       variants: {
-        solid: {
-          backgroundColor: 'primary.500',
-          pt: 2,
-          pb: 2,
-          my: 3,
-          rounded: 'xl',
-          _text: {fontWeight: 500},
+        solid: () => {
+          return {
+            backgroundColor: 'primary.400',
+            borderRadius: 10,
+            _text: {fontWeight: 200, fontSize: 16},
+            _pressed: {backgroundColor: 'primary.500'},
+          };
         },
         subtle: {
           _text: {fontWeight: 200, fontSize: 'sm'},
         },
       },
     },
+    Input: {
+      defaultProps: {
+        borderWidth: 0,
+        m: 2,
+        borderRadius: 10,
+        p: 4,
+        py: 5,
+        fontSize: 'md',
+        fontWeight: 100,
+        _light: {
+          placeholderTextColor: 'muted.500',
+        },
+        _dark: {
+          placeholderTextColor: 'muted.400',
+        },
+      },
+      baseStyle: (props: any) => {
+        return {
+          backgroundColor: themeTools.mode('muted.200', 'muted.700')(props),
+        };
+      },
+    },
+  },
+  shadows: {
+    1: {
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 10.84,
+      elevation: 10,
+    },
+    2: {
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.2,
+      shadowRadius: 10.84,
+      elevation: 10,
+    },
+    3: {
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.3,
+      shadowRadius: 10.84,
+      elevation: 10,
+    },
+  },
+  fontConfig: {
+    Trueno: {
+      100: {
+        normal: 'TruenoRg',
+        italic: 'TruenoRgIt',
+      },
+      200: {
+        normal: 'TruenoBd',
+        italic: 'TruenoBdIt',
+      },
+      300: {
+        normal: 'TruenoUltBlk',
+        italic: 'TruenoUltBlkIt',
+      },
+    },
+  },
+  fonts: {
+    heading: 'Trueno',
+    body: 'Trueno',
+    mono: 'Trueno',
+  },
+  config: {
+    useSystemColorMode: true,
   },
 });

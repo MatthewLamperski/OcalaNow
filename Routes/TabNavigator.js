@@ -34,15 +34,15 @@ const screenOptions = ({route, colorScheme, theme}) => ({
     shadowRadius: 16.0,
     backgroundColor:
       colorScheme === 'dark'
-        ? theme.colors.dark['100']
-        : theme.colors.light['50'],
+        ? theme.colors.warmGray['800']
+        : theme.colors.warmGray['100'],
     height: Platform.OS === 'ios' ? deviceHeight * 0.1 : deviceHeight * 0.075,
     borderTopWidth: 0,
   },
   tabBarIcon: ({focused, color, size}) => {
     let iconName;
     let iconColor = focused
-      ? theme.colors.primary['500']
+      ? theme.colors.primary['400']
       : theme.colors.muted['400'];
 
     if (route.name === 'Home') {
