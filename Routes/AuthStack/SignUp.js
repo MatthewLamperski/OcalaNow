@@ -6,7 +6,7 @@ import {
   Input,
   PresenceTransition,
   Pressable,
-  ScrollView,
+  Spinner,
   Text,
   useTheme,
   View,
@@ -19,7 +19,12 @@ import {
   useColorScheme,
 } from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {signUpWithEmail} from '../../FireFunctions';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import {
+  continueWithApple,
+  continueWithGoogle,
+  signUpWithEmail,
+} from '../../FireFunctions';
 import LinearGradient from 'react-native-linear-gradient';
 import LogoHorizontal from '../../assets/svgs/LogoHorizontal';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
@@ -40,6 +45,30 @@ const SignUp = ({navigation}) => {
       setLoading(false);
       console.log(err);
     });
+  };
+  const handleGoogleSignIn = () => {
+    if (!googleLoading) {
+      ReactNativeHapticFeedback.trigger(
+        Platform.select({ios: 'impactHeavy', android: 'impactMedium'}),
+      );
+      setGoogleLoading(true);
+      continueWithGoogle().catch(err => {
+        setGoogleLoading(false);
+        console.log(err);
+      });
+    }
+  };
+  const handleAppleSignIn = () => {
+    if (!appleLoading) {
+      ReactNativeHapticFeedback.trigger(
+        Platform.select({ios: 'impactHeavy', android: 'impactMedium'}),
+      );
+      setAppleLoading(true);
+      continueWithApple().catch(err => {
+        setAppleLoading(false);
+        console.log(err);
+      });
+    }
   };
 
   const [email, setEmail] = useState();
@@ -98,7 +127,7 @@ const SignUp = ({navigation}) => {
           flex={1}
           borderTopRightRadius={25}
           borderTopLeftRadius={25}>
-          <ScrollView>
+          <KeyboardAwareScrollView>
             <VStack p={3}>
               <Text pt={3} px={3} fontWeight={200} fontSize="2xl">
                 Sign Up for OcalaNow
@@ -160,7 +189,7 @@ const SignUp = ({navigation}) => {
                   ref={passwordRef}
                   placeholder="Password"
                   onSubmitEditing={() => {
-                    confirmPassword.current.focus();
+                    confirmRef.current.focus();
                   }}
                 />
                 <Input
@@ -249,6 +278,7 @@ const SignUp = ({navigation}) => {
                   alignItems="center">
                   <View style={styles.signInColumn}>
                     <TouchableOpacity
+                      onPress={handleGoogleSignIn}
                       style={[
                         styles.signInTouchable,
                         {
@@ -258,11 +288,23 @@ const SignUp = ({navigation}) => {
                             ],
                         },
                       ]}>
-                      <GoogleLogo height={30} width={30} />
+                      {googleLoading ? (
+                        <View
+                          bg="transparent"
+                          justifyContent="center"
+                          alignItems="center"
+                          h={30}
+                          w={30}>
+                          <Spinner color="primary.500" />
+                        </View>
+                      ) : (
+                        <GoogleLogo height={30} width={30} />
+                      )}
                     </TouchableOpacity>
                   </View>
                   <View style={styles.signInColumn}>
                     <TouchableOpacity
+                      onPress={handleAppleSignIn}
                       style={[
                         styles.signInTouchable,
                         {
@@ -272,17 +314,28 @@ const SignUp = ({navigation}) => {
                             ],
                         },
                       ]}>
-                      <AppleLogo
-                        fill={colorScheme === 'dark' ? 'white' : 'black'}
-                        height={30}
-                        width={30}
-                      />
+                      {appleLoading ? (
+                        <View
+                          bg="transparent"
+                          justifyContent="center"
+                          alignItems="center"
+                          h={30}
+                          w={30}>
+                          <Spinner color="primary.500" />
+                        </View>
+                      ) : (
+                        <AppleLogo
+                          fill={colorScheme === 'dark' ? 'white' : 'black'}
+                          height={30}
+                          width={30}
+                        />
+                      )}
                     </TouchableOpacity>
                   </View>
                 </View>
               </VStack>
             </VStack>
-          </ScrollView>
+          </KeyboardAwareScrollView>
           <View
             _dark={{
               borderTopWidth: 1,
@@ -292,7 +345,11 @@ const SignUp = ({navigation}) => {
             pb={bottom}
             pt={3}
             shadow={9}>
-            <Button mx={8} onPress={handleSignUp}>
+            <Button
+              isLoading={loading}
+              isLoadingText="Creating your profile..."
+              mx={8}
+              onPress={handleSignUp}>
               Sign Up
             </Button>
           </View>

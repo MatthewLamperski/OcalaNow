@@ -19,6 +19,7 @@ import SplashScreen from './Routes/SplashScreen';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import TabNavigator from './Routes/TabNavigator';
 import AuthStack from './Routes/AuthStack/AuthStack';
+import {GoogleSignin} from '@react-native-google-signin/google-signin';
 
 const App: () => Node = () => {
   const userStorage = useMMKV();
@@ -29,9 +30,17 @@ const App: () => Node = () => {
     user,
     setUser,
   };
+  // Functions
+  const configureGoogleSignIn = () => {
+    GoogleSignin.configure({
+      webClientId:
+        '28992864864-1unij7fj1jq5jdlapibrr2k9ecdfo4f8.apps.googleusercontent.com',
+    });
+  };
   const onAuthStateChanged = authUser => {
     if (authUser) {
       setAuthCredential(authUser);
+      setUser(authUser);
       if (initializing) {
         setInitializing(false);
       }
@@ -42,6 +51,11 @@ const App: () => Node = () => {
       }
     }
   };
+  // Effects
+  useEffect(() => {
+    // Run on App start
+    configureGoogleSignIn();
+  }, []);
   useEffect(() => {
     const authSubscriber = Auth().onAuthStateChanged(onAuthStateChanged);
     return authSubscriber;
