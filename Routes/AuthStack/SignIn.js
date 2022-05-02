@@ -1,4 +1,4 @@
-import React, {useRef, useState} from 'react';
+import React, {useContext, useRef, useState} from 'react';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {
   Box,
@@ -29,22 +29,67 @@ import {
   continueWithApple,
   continueWithGoogle,
   signInWithEmail,
+  signOut,
 } from '../../FireFunctions';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
+import {AppContext} from '../../AppContext';
 
 const SignIn = ({navigation}) => {
   const theme = useTheme();
   const colorScheme = useColorScheme();
   const {top, bottom} = useSafeAreaInsets();
+  const {setError} = useContext(AppContext);
+  const validated = () => {
+    if (email && password) {
+      if (email.length === 0 || password.length === 0) {
+        setError({
+          title: 'Forms not complete',
+          message: 'Please ensure all fields are filled.',
+        });
+        return false;
+      } else if (!/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
+        setError({
+          title: 'Bad format',
+          message: 'Please ensure your email is formatted correctly.',
+        });
+        return false;
+      } else {
+        return true;
+      }
+    } else {
+      setError({
+        title: 'Forms not complete',
+        message: 'Please ensure all fields are filled.',
+      });
+      return false;
+    }
+  };
   const handleSignIn = () => {
-    setLoading(true);
-    ReactNativeHapticFeedback.trigger(
-      Platform.select({ios: 'impactHeavy', android: 'impactMedium'}),
-    );
-    signInWithEmail(email, password).catch(err => {
-      setLoading(false);
-      console.log(err);
-    });
+    if (validated()) {
+      setLoading(true);
+      ReactNativeHapticFeedback.trigger(
+        Platform.select({ios: 'impactHeavy', android: 'impactMedium'}),
+      );
+      signInWithEmail(email, password).catch(err => {
+        setLoading(false);
+        let notification = {
+          title: 'Invalid login attempt!',
+          message: 'Please try again later',
+        };
+        if (err.code === 'auth/invalid-email') {
+          notification.message = 'That email address is not valid.';
+        } else if (err.code === 'auth/user-disabled') {
+          notification.message =
+            'You have been disabled, contact support for more information.';
+        } else if (err.code === 'auth/user-not-found') {
+          notification.message = 'There is no user with that email.';
+        } else if (err.code === 'auth/wrong-password') {
+          notification.message =
+            "Those credentials don't match with our system. (You may have signed up with Google)";
+        }
+        setError(notification);
+      });
+    }
   };
   const handleGoogleSignIn = () => {
     if (!googleLoading) {
@@ -54,7 +99,12 @@ const SignIn = ({navigation}) => {
       setGoogleLoading(true);
       continueWithGoogle().catch(err => {
         setGoogleLoading(false);
-        console.log(err);
+        if (!err.code || err.code !== '-5') {
+          setError({
+            title: 'Error',
+            message: `${err}`,
+          });
+        }
       });
     }
   };
@@ -66,7 +116,12 @@ const SignIn = ({navigation}) => {
       setAppleLoading(true);
       continueWithApple().catch(err => {
         setAppleLoading(false);
-        console.log(err);
+        if (err.code !== '1001') {
+          setError({
+            title: 'Error signing you in',
+            message: `Please try signing in another way. (You may have just canceled.) Error code: ${err.code}`,
+          });
+        }
       });
     }
   };
@@ -313,7 +368,9 @@ const SignIn = ({navigation}) => {
               isLoading={loading}
               isLoadingText="Signing you in..."
               mx={8}
-              onPress={handleSignIn}>
+              onPress={() => {
+                signOut();
+              }}>
               Sign In
             </Button>
             <TouchableOpacity

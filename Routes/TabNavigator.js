@@ -39,7 +39,7 @@ const screenOptions = ({route, colorScheme, theme}) => ({
     height: Platform.OS === 'ios' ? deviceHeight * 0.1 : deviceHeight * 0.075,
     borderTopWidth: 0,
   },
-  tabBarIcon: ({focused, color, size}) => {
+  tabBarIcon: ({focused, size}) => {
     let iconName;
     let iconColor = focused
       ? theme.colors.primary['400']

@@ -2,12 +2,11 @@ import React, {useContext} from 'react';
 import {Button, ScrollView, Text, View} from 'native-base';
 import {AppContext} from '../AppContext';
 import Auth from '@react-native-firebase/auth';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useMMKV, useMMKVObject} from 'react-native-mmkv';
+import {signOut} from '../FireFunctions';
 
 const Home = () => {
-  const {user, setUser} = useContext(AppContext);
-  const {top, bottom} = useSafeAreaInsets();
+  const {user, setUser, userBank} = useContext(AppContext);
   const signIn = () => {
     Auth()
       .signInWithEmailAndPassword('matthew.lamperski@gmail.com', 'Tri77con')
@@ -26,25 +25,21 @@ const Home = () => {
       pt={2}
       style={{justifyContent: 'center', alignItems: 'center', flex: 1}}>
       <ScrollView>
-        <Text>Home Tab</Text>
-        <Text fontSize="xs">Extra Small</Text>
-        <Text fontSize="sm">Small</Text>
-        <Text fontSize="md">Medium</Text>
-        <Text fontSize="lg">Large</Text>
-        <Text fontSize="xl">Extra Large</Text>
-        <Text>{JSON.stringify(user, null, 2)}</Text>
         <Button
           my={2}
           onPress={() => {
-            Auth().signOut();
+            signOut();
           }}>
           Sign Out
         </Button>
         <Button
           onPress={() => {
-            signIn();
+            setUser(prevState => ({
+              ...prevState,
+              testing: 'ummm I think I got it',
+            }));
           }}>
-          Sign In
+          Set Interests
         </Button>
         <Button
           my={2}
@@ -52,13 +47,13 @@ const Home = () => {
             if (user) {
               setProfilePic({
                 ...profilePicBank,
-                [user.uid]: `${user.uid} profile pic`,
+                [user.uid]: `${user.uid} testing`,
               });
             }
           }}>
           Set Profile Pic
         </Button>
-        <Text>{JSON.stringify(profilePicBank, null, 2)}</Text>
+        <Text>{JSON.stringify(user, null, 2)}</Text>
       </ScrollView>
     </View>
   );

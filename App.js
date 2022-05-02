@@ -8,7 +8,7 @@
 
 import type {Node} from 'react';
 import React, {useEffect, useState} from 'react';
-import {StyleSheet} from 'react-native';
+import {StyleSheet, useColorScheme} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import {NativeBaseProvider} from 'native-base/src/core/NativeBaseProvider';
 import {appTheme} from './Theme';
@@ -20,15 +20,28 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import TabNavigator from './Routes/TabNavigator';
 import AuthStack from './Routes/AuthStack/AuthStack';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
+import Toast from 'react-native-toast-message';
+import {toastConfig} from './ToastConfig';
+import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
+import {getUser, updateUser} from './FireFunctions';
 
 const App: () => Node = () => {
+  const colorScheme = useColorScheme();
   const userStorage = useMMKV();
-  const [user, setUser] = useMMKVObject('user', userStorage);
-  const [authCredential, setAuthCredential] = useState();
+  const [userBank, setUserBank] = useMMKVObject('userBank', userStorage);
+  const [shouldUpdateUser, setShouldUpdateUser] = useState(false);
+  const [user, setUser] = useState();
   const [initializing, setInitializing] = useState(true);
+  const [notification, setNotification] = useState();
+  const [error, setError] = useState();
   const context = {
     user,
     setUser,
+    notification,
+    setNotification,
+    error,
+    setError,
+    userBank,
   };
   // Functions
   const configureGoogleSignIn = () => {
@@ -37,15 +50,61 @@ const App: () => Node = () => {
         '28992864864-1unij7fj1jq5jdlapibrr2k9ecdfo4f8.apps.googleusercontent.com',
     });
   };
-  const onAuthStateChanged = authUser => {
+  const firstTimeSigningIn = userCred => {
+    getUser(userCred.uid)
+      .then(userDoc => {
+        setUser({uid: userCred.id, ...userDoc});
+        if (initializing) {
+          setInitializing(false);
+        }
+      })
+      .catch(err => {
+        // First time registering (no user doc)
+        setShouldUpdateUser(true);
+        setUser({
+          uid: userCred.uid,
+          ...(userCred.email ? {email: userCred.email} : {}),
+          ...(userCred.displayName ? {displayName: userCred.displayName} : {}),
+        });
+        if (initializing) {
+          setInitializing(false);
+        }
+      });
+  };
+  const updateLocalUser = userCred => {
+    getUser(userCred.uid)
+      .then(userDoc => {
+        console.log('updated local user');
+        setUser(userDoc);
+        setShouldUpdateUser(true);
+      })
+      .catch(err => console.log("Couldn't update user"));
+  };
+  let authFlag = true;
+  const onAuthStateChanged = async authUser => {
     if (authUser) {
-      setAuthCredential(authUser);
-      setUser(authUser);
-      if (initializing) {
-        setInitializing(false);
+      // Check user bank to see if user obj exists
+      if (authFlag) {
+        authFlag = false;
+        try {
+          let currentUser = await userBank[authUser.uid];
+          if (currentUser === undefined) {
+            firstTimeSigningIn(authUser);
+          } else {
+            updateLocalUser(authUser);
+            setUser(currentUser);
+            if (initializing) {
+              setInitializing(false);
+            }
+          }
+        } catch (err) {
+          firstTimeSigningIn(authUser);
+        }
       }
     } else {
-      setAuthCredential(null);
+      authFlag = true;
+      setShouldUpdateUser(false);
+      setUser();
       if (initializing) {
         setInitializing(false);
       }
@@ -57,9 +116,56 @@ const App: () => Node = () => {
     configureGoogleSignIn();
   }, []);
   useEffect(() => {
-    const authSubscriber = Auth().onAuthStateChanged(onAuthStateChanged);
-    return authSubscriber;
+    return Auth().onAuthStateChanged(onAuthStateChanged);
   }, []);
+  useEffect(() => {
+    if (user) {
+      if (userBank) {
+        setUserBank({
+          ...userBank,
+          [user.uid]: user,
+        });
+      } else {
+        setUserBank({
+          [user.uid]: user,
+        });
+      }
+    }
+  }, [user]);
+  useEffect(() => {
+    if (user) {
+      if (shouldUpdateUser) {
+        updateUser(user)
+          .then(() => {
+            console.log('updated user');
+          })
+          .catch(err => console.log(err));
+      }
+    }
+  }, [user]);
+  useEffect(() => {
+    if (notification) {
+      ReactNativeHapticFeedback.trigger('notificationWarning');
+      Toast.show({
+        type: 'info',
+        text1: notification.title,
+        text2: notification.message,
+        onHide: () => setNotification(),
+        onPress: notification.onPress,
+        props: {colorScheme},
+      });
+    } else if (error) {
+      ReactNativeHapticFeedback.trigger('notificationError');
+      Toast.show({
+        type: 'error',
+        text1: error.title,
+        text2: error.message,
+        onHide: () => setError(),
+        onPress: error.onPress,
+        props: {colorScheme},
+      });
+    }
+  }, [error, notification]);
   if (initializing) {
     return (
       <NativeBaseProvider theme={appTheme}>
@@ -67,18 +173,19 @@ const App: () => Node = () => {
       </NativeBaseProvider>
     );
   }
-  const forFade = ({current}) => ({
-    cardStyle: {
-      opacity: current.progress,
-    },
-  });
   const Stack = createNativeStackNavigator();
   return (
     <AppContext.Provider value={context}>
       <NativeBaseProvider theme={appTheme}>
         <NavigationContainer>
           <Stack.Navigator>
-            {authCredential === null ? (
+            {user ? (
+              <Stack.Screen
+                name="TabNavigator"
+                options={{animation: 'fade'}}
+                component={TabNavigator}
+              />
+            ) : (
               <Stack.Screen
                 name="AuthStack"
                 component={AuthStack}
@@ -87,15 +194,10 @@ const App: () => Node = () => {
                   animation: 'fade',
                 }}
               />
-            ) : (
-              <Stack.Screen
-                name="TabNavigator"
-                options={{animation: 'fade'}}
-                component={TabNavigator}
-              />
             )}
           </Stack.Navigator>
         </NavigationContainer>
+        <Toast config={toastConfig} />
       </NativeBaseProvider>
     </AppContext.Provider>
   );

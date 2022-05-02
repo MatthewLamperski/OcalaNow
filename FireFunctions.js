@@ -66,6 +66,54 @@ export const continueWithApple = () => {
   });
 };
 
+export const signOut = () => {
+  return new Promise((resolve, reject) => {
+    auth()
+      .signOut()
+      .then(() => {
+        resolve();
+      })
+      .catch(err => reject(err));
+  });
+};
+
+// Firestore Functions
+
+export const getUser = uid => {
+  return new Promise((resolve, reject) => {
+    firestore()
+      .collection('users')
+      .doc(uid)
+      .get()
+      .then(docSnapshot => {
+        if (docSnapshot.exists) {
+          resolve({uid: docSnapshot.id, ...docSnapshot.data()});
+        } else {
+          reject('No user doc');
+        }
+      })
+      .catch(err => reject(err));
+  });
+};
+
+export const updateUser = user => {
+  return new Promise((resolve, reject) => {
+    firestore()
+      .collection('users')
+      .doc(user.uid)
+      .update(user)
+      .then(() => resolve())
+      .catch(err => {
+        firestore()
+          .collection('users')
+          .doc(user.uid)
+          .set(user)
+          .then(() => resolve())
+          .catch(err => reject(err));
+      });
+  });
+};
+
 export const getCompanies = () => {
   return new Promise((resolve, reject) => {
     firestore()

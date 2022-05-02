@@ -1,4 +1,4 @@
-import React, {useRef, useState} from 'react';
+import React, {useContext, useRef, useState} from 'react';
 import {
   Box,
   Button,
@@ -31,20 +31,55 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import GoogleLogo from '../../assets/svgs/GoogleLogo';
 import AppleLogo from '../../assets/svgs/AppleLogo';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
+import {AppContext} from '../../AppContext';
 
 const SignUp = ({navigation}) => {
   const theme = useTheme();
+  const {setError} = useContext(AppContext);
   const colorScheme = useColorScheme();
   const {top, bottom} = useSafeAreaInsets();
+  const validated = () => {
+    if (email && password) {
+      if (email.length === 0 || password.length === 0) {
+        setError({
+          title: 'Forms not complete',
+          message: 'Please ensure all fields are filled.',
+        });
+        return false;
+      } else if (!/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
+        setError({
+          title: 'Bad format',
+          message: 'Please ensure your email is formatted correctly.',
+        });
+        return false;
+      } else if (password !== confirmPassword) {
+        setError({
+          title: 'Passwords do not match',
+          message:
+            'Please make sure you confirmed your password correctly and try again.',
+        });
+      } else {
+        return true;
+      }
+    } else {
+      setError({
+        title: 'Forms not complete',
+        message: 'Please ensure all fields are filled.',
+      });
+      return false;
+    }
+  };
   const handleSignUp = () => {
-    setLoading(true);
-    ReactNativeHapticFeedback.trigger(
-      Platform.select({ios: 'impactHeavy', android: 'impactMedium'}),
-    );
-    signUpWithEmail(email, password).catch(err => {
-      setLoading(false);
-      console.log(err);
-    });
+    if (validated()) {
+      setLoading(true);
+      ReactNativeHapticFeedback.trigger(
+        Platform.select({ios: 'impactHeavy', android: 'impactMedium'}),
+      );
+      signUpWithEmail(email, password).catch(err => {
+        setLoading(false);
+        console.log(err);
+      });
+    }
   };
   const handleGoogleSignIn = () => {
     if (!googleLoading) {
@@ -54,7 +89,12 @@ const SignUp = ({navigation}) => {
       setGoogleLoading(true);
       continueWithGoogle().catch(err => {
         setGoogleLoading(false);
-        console.log(err);
+        if (!err.code || err.code !== '-5') {
+          setError({
+            title: 'Error',
+            message: `${err}`,
+          });
+        }
       });
     }
   };
@@ -66,7 +106,12 @@ const SignUp = ({navigation}) => {
       setAppleLoading(true);
       continueWithApple().catch(err => {
         setAppleLoading(false);
-        console.log(err);
+        if (err.code !== '1001') {
+          setError({
+            title: 'Error signing you in',
+            message: `Please try signing in another way. (You may have just canceled.) Error code: ${err.code}`,
+          });
+        }
       });
     }
   };

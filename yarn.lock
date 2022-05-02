@@ -1150,6 +1150,11 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
+"@notifee/react-native@^5.2.1":
+  version "5.2.1"
+  resolved "https://registry.yarnpkg.com/@notifee/react-native/-/react-native-5.2.1.tgz#ecf38344c682940be1be8a56141a82bd8fa93a4c"
+  integrity sha512-qtGU2161qF7SQEFBOGec+EMLVX6ISBgpBllEjq6zd/zRZ35RraqkyFS/S84N6J14l6D5MyNLUqKRkZNG2aMFqg==
+
 "@react-aria/checkbox@^3.2.1":
   version "3.3.3"
   resolved "https://registry.yarnpkg.com/@react-aria/checkbox/-/checkbox-3.3.3.tgz#f16faf006c47013b88f6234d55463e46b7c85473"
@@ -6790,6 +6795,11 @@ react-native-svg@^12.3.0:
   dependencies:
     css-select "^4.2.1"
     css-tree "^1.0.0-alpha.39"
+
+react-native-toast-message@^2.1.5:
+  version "2.1.5"
+  resolved "https://registry.yarnpkg.com/react-native-toast-message/-/react-native-toast-message-2.1.5.tgz#550acb9c6c0f1ee49c6b57b65a56d34e297eb723"
+  integrity sha512-mk3rELtBEhrhWBCN6CTaw0gypgL9ZNauX3xx1LUs4uee9vc0pVsghrKxO57vroUCcNL2hDeZSLJWdQNMCkGeaQ==
 
 react-native-vector-icons@^9.1.0:
   version "9.1.0"
