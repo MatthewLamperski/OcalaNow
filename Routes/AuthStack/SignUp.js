@@ -2,6 +2,7 @@ import React, {useContext, useRef, useState} from 'react';
 import {
   Box,
   Button,
+  HStack,
   Icon,
   Input,
   PresenceTransition,
@@ -343,40 +344,52 @@ const SignUp = ({navigation}) => {
                           <Spinner color="primary.500" />
                         </View>
                       ) : (
-                        <GoogleLogo height={30} width={30} />
-                      )}
-                    </TouchableOpacity>
-                  </View>
-                  <View style={styles.signInColumn}>
-                    <TouchableOpacity
-                      onPress={handleAppleSignIn}
-                      style={[
-                        styles.signInTouchable,
-                        {
-                          backgroundColor:
-                            theme.colors.muted[
-                              colorScheme === 'dark' ? '700' : '100'
-                            ],
-                        },
-                      ]}>
-                      {appleLoading ? (
-                        <View
-                          bg="transparent"
+                        <HStack
+                          space={2}
                           justifyContent="center"
-                          alignItems="center"
-                          h={30}
-                          w={30}>
-                          <Spinner color="primary.500" />
-                        </View>
-                      ) : (
-                        <AppleLogo
-                          fill={colorScheme === 'dark' ? 'white' : 'black'}
-                          height={30}
-                          width={30}
-                        />
+                          alignItems="center">
+                          <GoogleLogo height={25} width={25} />
+                          {Platform.OS === 'android' && (
+                            <Text fontSize={18} fontWeight={200}>
+                              Google
+                            </Text>
+                          )}
+                        </HStack>
                       )}
                     </TouchableOpacity>
                   </View>
+                  {Platform.OS === 'ios' && (
+                    <View style={styles.signInColumn}>
+                      <TouchableOpacity
+                        onPress={handleAppleSignIn}
+                        style={[
+                          styles.signInTouchable,
+                          {
+                            backgroundColor:
+                              theme.colors.muted[
+                                colorScheme === 'dark' ? '700' : '100'
+                              ],
+                          },
+                        ]}>
+                        {appleLoading ? (
+                          <View
+                            bg="transparent"
+                            justifyContent="center"
+                            alignItems="center"
+                            h={30}
+                            w={30}>
+                            <Spinner color="primary.500" />
+                          </View>
+                        ) : (
+                          <AppleLogo
+                            fill={colorScheme === 'dark' ? 'white' : 'black'}
+                            height={25}
+                            width={25}
+                          />
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                  )}
                 </View>
               </VStack>
             </VStack>
@@ -387,7 +400,7 @@ const SignUp = ({navigation}) => {
               borderTopColor: 'muted.700',
             }}
             justifyContent="center"
-            pb={bottom}
+            pb={Platform.select({ios: bottom, android: 3})}
             pt={3}
             shadow={9}>
             <Button

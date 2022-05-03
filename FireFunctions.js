@@ -71,6 +71,7 @@ export const signOut = () => {
     auth()
       .signOut()
       .then(() => {
+        GoogleSignin.signOut();
         resolve();
       })
       .catch(err => reject(err));

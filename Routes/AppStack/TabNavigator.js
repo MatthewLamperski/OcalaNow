@@ -55,10 +55,9 @@ const screenOptions = ({route, colorScheme, theme}) => ({
     return <Ionicons name={iconName} color={iconColor} size={size + 2} />;
   },
   tabBarShowLabel: false,
+  lazy: true,
 });
 
-const options = {
-  header: () => null,
-};
+const options = {header: () => null};
 
 export default TabNavigator;

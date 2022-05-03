@@ -1,12 +1,14 @@
 import React, {useContext} from 'react';
 import {Button, ScrollView, Text, View} from 'native-base';
-import {AppContext} from '../AppContext';
+import {AppContext} from '../../AppContext';
 import Auth from '@react-native-firebase/auth';
 import {useMMKV, useMMKVObject} from 'react-native-mmkv';
-import {signOut} from '../FireFunctions';
+import {signOut} from '../../FireFunctions';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 const Home = () => {
   const {user, setUser, userBank} = useContext(AppContext);
+  const {top} = useSafeAreaInsets();
   const signIn = () => {
     Auth()
       .signInWithEmailAndPassword('matthew.lamperski@gmail.com', 'Tri77con')
@@ -21,9 +23,7 @@ const Home = () => {
     profilePicStorage,
   );
   return (
-    <View
-      pt={2}
-      style={{justifyContent: 'center', alignItems: 'center', flex: 1}}>
+    <View flex={1}>
       <ScrollView>
         <Button
           my={2}

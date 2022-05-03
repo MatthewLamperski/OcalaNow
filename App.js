@@ -17,13 +17,13 @@ import {AppContext} from './AppContext';
 import Auth from '@react-native-firebase/auth';
 import SplashScreen from './Routes/SplashScreen';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import TabNavigator from './Routes/TabNavigator';
 import AuthStack from './Routes/AuthStack/AuthStack';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import Toast from 'react-native-toast-message';
 import {toastConfig} from './ToastConfig';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import {getUser, updateUser} from './FireFunctions';
+import AppStack from './Routes/AppStack/AppStack';
 
 const App: () => Node = () => {
   const colorScheme = useColorScheme();
@@ -74,7 +74,6 @@ const App: () => Node = () => {
   const updateLocalUser = userCred => {
     getUser(userCred.uid)
       .then(userDoc => {
-        console.log('updated local user');
         setUser(userDoc);
         setShouldUpdateUser(true);
       })
@@ -181,9 +180,9 @@ const App: () => Node = () => {
           <Stack.Navigator>
             {user ? (
               <Stack.Screen
-                name="TabNavigator"
-                options={{animation: 'fade'}}
-                component={TabNavigator}
+                name="AppStack"
+                options={{header: () => null, animation: 'fade'}}
+                component={AppStack}
               />
             ) : (
               <Stack.Screen

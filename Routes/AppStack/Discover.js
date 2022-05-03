@@ -1,12 +1,11 @@
 import React, {useEffect, useState} from 'react';
-import {getCompanies} from '../FireFunctions';
+import {getCompanies} from '../../FireFunctions';
 import Geocoder from '@timwangdev/react-native-geocoder/src/geocoder';
-import {HStack, ScrollView, Text, useTheme, View} from 'native-base';
+import {Box, HStack, ScrollView, Text, useTheme, View} from 'native-base';
 import MapView, {Marker} from 'react-native-maps';
-import {Box, Pressable} from 'native-base';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
-import Logo from './Logo';
+import Logo from '../Logo';
 
 const Discover = () => {
   const [companies, setCompanies] = useState();

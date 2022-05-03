@@ -3,6 +3,7 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {
   Box,
   Button,
+  HStack,
   Icon,
   Input,
   PresenceTransition,
@@ -29,7 +30,6 @@ import {
   continueWithApple,
   continueWithGoogle,
   signInWithEmail,
-  signOut,
 } from '../../FireFunctions';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import {AppContext} from '../../AppContext';
@@ -178,9 +178,7 @@ const SignIn = ({navigation}) => {
           flex={1}
           borderTopRightRadius={25}
           borderTopLeftRadius={25}>
-          <KeyboardAwareScrollView
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{flex: 1}}>
+          <KeyboardAwareScrollView keyboardShouldPersistTaps="handled">
             <VStack flex={1} p={3}>
               <Text pt={3} px={3} fontWeight={200} fontSize="2xl">
                 Sign in to OcalaNow
@@ -290,7 +288,7 @@ const SignIn = ({navigation}) => {
                   />
                 </Box>
                 <View
-                  p={3}
+                  m={5}
                   flexDirection="row"
                   display="flex"
                   justifyContent="center"
@@ -317,40 +315,52 @@ const SignIn = ({navigation}) => {
                           <Spinner color="primary.500" />
                         </View>
                       ) : (
-                        <GoogleLogo height={30} width={30} />
-                      )}
-                    </TouchableOpacity>
-                  </View>
-                  <View style={styles.signInColumn}>
-                    <TouchableOpacity
-                      onPress={handleAppleSignIn}
-                      style={[
-                        styles.signInTouchable,
-                        {
-                          backgroundColor:
-                            theme.colors.muted[
-                              colorScheme === 'dark' ? '700' : '100'
-                            ],
-                        },
-                      ]}>
-                      {appleLoading ? (
-                        <View
-                          bg="transparent"
+                        <HStack
+                          space={2}
                           justifyContent="center"
-                          alignItems="center"
-                          h={30}
-                          w={30}>
-                          <Spinner color="primary.500" />
-                        </View>
-                      ) : (
-                        <AppleLogo
-                          fill={colorScheme === 'dark' ? 'white' : 'black'}
-                          height={30}
-                          width={30}
-                        />
+                          alignItems="center">
+                          <GoogleLogo height={25} width={25} />
+                          {Platform.OS === 'android' && (
+                            <Text fontSize={18} fontWeight={200}>
+                              Google
+                            </Text>
+                          )}
+                        </HStack>
                       )}
                     </TouchableOpacity>
                   </View>
+                  {Platform.OS === 'ios' && (
+                    <View style={styles.signInColumn}>
+                      <TouchableOpacity
+                        onPress={handleAppleSignIn}
+                        style={[
+                          styles.signInTouchable,
+                          {
+                            backgroundColor:
+                              theme.colors.muted[
+                                colorScheme === 'dark' ? '700' : '100'
+                              ],
+                          },
+                        ]}>
+                        {appleLoading ? (
+                          <View
+                            bg="transparent"
+                            justifyContent="center"
+                            alignItems="center"
+                            h={30}
+                            w={30}>
+                            <Spinner color="primary.500" />
+                          </View>
+                        ) : (
+                          <AppleLogo
+                            fill={colorScheme === 'dark' ? 'white' : 'black'}
+                            height={25}
+                            width={25}
+                          />
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                  )}
                 </View>
               </VStack>
             </VStack>
@@ -361,16 +371,14 @@ const SignIn = ({navigation}) => {
               borderTopColor: 'muted.700',
             }}
             justifyContent="center"
-            pb={bottom}
+            pb={Platform.select({ios: bottom, android: 3})}
             pt={3}
             shadow={9}>
             <Button
               isLoading={loading}
               isLoadingText="Signing you in..."
               mx={8}
-              onPress={() => {
-                signOut();
-              }}>
+              onPress={handleSignIn}>
               Sign In
             </Button>
             <TouchableOpacity
