@@ -49,6 +49,7 @@ const Discover = () => {
           latitudeDelta: 0.0922,
           longitudeDelta: 0.0421,
         }}>
+        {/*<Circle center= radius={}*/}
         {companies &&
           companies.map(company => (
             <Marker
@@ -67,13 +68,10 @@ const Discover = () => {
       </MapView>
       <ScrollView
         showsHorizontalScrollIndicator={false}
-        p={3}
         style={{position: 'absolute', top: 0, display: 'flex'}}
-        horizontal={true}
-        pt={top}>
+        horizontal={true}>
         <HStack
           p={3}
-          pr={8}
           space={2}
           display="flex"
           justifyContent="center"
@@ -87,13 +85,9 @@ const Discover = () => {
             rounded="3xl"
             p={3}
             px={4}
-            bg="muted.800">
-            <FontAwesome5
-              name="walking"
-              size={16}
-              color={theme.colors.primary['500']}
-            />
-            <Text pl={3} color="white" fontSize={14}>
+            bg="primary.500">
+            <FontAwesome5 name="walking" size={16} color="white" />
+            <Text fontWeight={200} pl={3} color="white" fontSize={14}>
               Walking Distance
             </Text>
           </Box>

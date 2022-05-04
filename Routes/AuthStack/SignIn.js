@@ -67,9 +67,6 @@ const SignIn = ({navigation}) => {
   const handleSignIn = () => {
     if (validated()) {
       setLoading(true);
-      ReactNativeHapticFeedback.trigger(
-        Platform.select({ios: 'impactHeavy', android: 'impactMedium'}),
-      );
       signInWithEmail(email, password).catch(err => {
         setLoading(false);
         let notification = {
@@ -378,7 +375,7 @@ const SignIn = ({navigation}) => {
               isLoading={loading}
               isLoadingText="Signing you in..."
               mx={8}
-              onPress={handleSignIn}>
+              onButtonPress={handleSignIn}>
               Sign In
             </Button>
             <TouchableOpacity

@@ -115,6 +115,30 @@ export const updateUser = user => {
   });
 };
 
+export const getCards = () => {
+  return new Promise((resolve, reject) => {
+    firestore()
+      .collection('cards')
+      .get()
+      .then(querySnapshot => {
+        resolve(
+          querySnapshot.docs.map(doc => ({docID: doc.id, ...doc.data()})),
+        );
+      })
+      .catch(err => reject(err));
+  });
+};
+
+export const getAsset = (type, docID) => {
+  return new Promise((resolve, reject) => {
+    storage()
+      .ref(`cards/${docID}/${type}`)
+      .getDownloadURL()
+      .then(url => resolve(url))
+      .catch(err => reject(err));
+  });
+};
+
 export const getCompanies = () => {
   return new Promise((resolve, reject) => {
     firestore()

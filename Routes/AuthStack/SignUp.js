@@ -73,9 +73,6 @@ const SignUp = ({navigation}) => {
   const handleSignUp = () => {
     if (validated()) {
       setLoading(true);
-      ReactNativeHapticFeedback.trigger(
-        Platform.select({ios: 'impactHeavy', android: 'impactMedium'}),
-      );
       signUpWithEmail(email, password).catch(err => {
         setLoading(false);
         console.log(err);
@@ -407,7 +404,7 @@ const SignUp = ({navigation}) => {
               isLoading={loading}
               isLoadingText="Creating your profile..."
               mx={8}
-              onPress={handleSignUp}>
+              onButtonPress={handleSignUp}>
               Sign Up
             </Button>
           </View>

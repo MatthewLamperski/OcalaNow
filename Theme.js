@@ -1,4 +1,6 @@
 import {extendTheme, themeTools} from 'native-base';
+import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
+import {Platform} from 'react-native';
 
 export const appTheme = extendTheme({
   colors: {
@@ -56,6 +58,19 @@ export const appTheme = extendTheme({
       },
     },
     Button: {
+      baseStyle: ({onButtonPress}) => {
+        return {
+          onPress: () => {
+            console.log('Button Pressed');
+            ReactNativeHapticFeedback.trigger(
+              Platform.select({ios: 'impactHeavy', android: 'impactMedium'}),
+            );
+            if (onButtonPress) {
+              onButtonPress();
+            }
+          },
+        };
+      },
       defaultProps: {
         p: 4,
         m: 3,

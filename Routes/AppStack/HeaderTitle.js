@@ -8,9 +8,9 @@ const HeaderTitle = ({route, navigation}) => {
     return getFocusedRouteNameFromRoute(route) ?? 'Home';
   };
   return (
-    <HStack space={2} justifyContent="center" alignItems="center">
+    <HStack space={1} justifyContent="center" alignItems="center">
       <Box h="100%" w="30">
-        <TagLogoGold height={30} width="100%" />
+        <TagLogoGold height={25} width="100%" />
       </Box>
       <Text fontSize={16} fontWeight={300}>
         {getHeaderTitle()}

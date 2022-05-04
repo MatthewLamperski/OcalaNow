@@ -34,8 +34,8 @@ const screenOptions = ({route, colorScheme, theme}) => ({
     shadowRadius: 16.0,
     backgroundColor:
       colorScheme === 'dark'
-        ? theme.colors.warmGray['800']
-        : theme.colors.warmGray['100'],
+        ? theme.colors.muted['900']
+        : theme.colors.muted['100'],
     height: Platform.OS === 'ios' ? deviceHeight * 0.1 : deviceHeight * 0.075,
     borderTopWidth: 0,
   },
