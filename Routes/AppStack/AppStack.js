@@ -4,6 +4,7 @@ import TabNavigator from './TabNavigator';
 import {useColorScheme} from 'react-native';
 import {useTheme} from 'native-base';
 import HeaderTitle from './HeaderTitle';
+import CardDetailView from './CardDetailView';
 
 const Stack = createNativeStackNavigator();
 
@@ -33,6 +34,7 @@ const AppStack = () => {
         name="TabNavigator"
         component={TabNavigator}
       />
+      <Stack.Screen name="CardDetailView" component={CardDetailView} />
     </Stack.Navigator>
   );
 };

@@ -49,7 +49,6 @@ const Discover = () => {
           latitudeDelta: 0.0922,
           longitudeDelta: 0.0421,
         }}>
-        {/*<Circle center= radius={}*/}
         {companies &&
           companies.map(company => (
             <Marker
