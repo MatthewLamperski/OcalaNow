@@ -165,6 +165,17 @@ export const getCards = () => {
   });
 };
 
+export const getTags = () => {
+  return new Promise((resolve, reject) => {
+    firestore()
+      .collection('app')
+      .doc('appInfo')
+      .get()
+      .then(docSnapshot => resolve([...docSnapshot.data().tags]))
+      .catch(err => reject(err));
+  });
+};
+
 export const getAsset = (type, docID) => {
   return new Promise((resolve, reject) => {
     storage()

@@ -1,11 +1,11 @@
 import React, {useEffect, useState} from 'react';
-import {getPicURL} from '../FireFunctions';
+import {getAsset} from '../FireFunctions';
 import {Image, Skeleton} from 'native-base';
 
-const Logo = ({logo}) => {
+const Logo = ({docID}) => {
   const [url, setURL] = useState();
   useEffect(() => {
-    getPicURL(logo)
+    getAsset('logo', docID)
       .then(url => setURL(url))
       .catch(err => console.log(err));
   }, []);
@@ -15,13 +15,12 @@ const Logo = ({logo}) => {
         source={{uri: url}}
         resizeMode="contain"
         alt="Logo"
-        height={12}
-        width={12}
+        style={{height: 30, width: 30}}
         borderRadius={40}
       />
     );
   } else {
-    return <Skeleton height={8} width={8} borderRadius={40} />;
+    return <Skeleton style={{height: 30, width: 20}} borderRadius={40} />;
   }
 };
 

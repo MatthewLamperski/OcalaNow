@@ -1,7 +1,6 @@
 import React, {useContext, useEffect, useRef, useState} from 'react';
-import {HStack, Pressable, Spinner, useTheme, View} from 'native-base';
+import {Button, HStack, Spinner, useTheme, View} from 'native-base';
 import {AppContext} from '../../AppContext';
-import {useMMKV, useMMKVObject} from 'react-native-mmkv';
 import Card from './Components/Card';
 import SwipeCards from 'react-native-swipe-cards-deck';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
@@ -12,22 +11,24 @@ import {getCards} from '../../FireFunctions';
 import Geolocation from '@react-native-community/geolocation';
 
 const Home = ({navigation}) => {
-  const {user, setUser, userBank, setNotification} = useContext(AppContext);
+  const {user, setUser, setNotification} = useContext(AppContext);
   const theme = useTheme();
-  const profilePicStorage = useMMKV();
   const [cards, setCards] = useState();
   const swiperRef = useRef(null);
   const [currentLocation, setCurrentLocation] = useState();
-  const [profilePicBank, setProfilePic] = useMMKVObject(
-    'profilePicBank',
-    profilePicStorage,
-  );
+  const [saved, setSaved] = useState(user.saved ? user.saved : []);
+  const [recycled, setRecycled] = useState(user.recycled ? user.recycled : []);
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [actionsDisabled, setActionsDisabled] = useState(false);
   useEffect(() => {
-    getCards()
-      .then(res => {
-        setCards(res);
-      })
-      .catch(err => console.log(err));
+    if (actionsDisabled) {
+      setTimeout(() => {
+        setActionsDisabled(false);
+      }, 1000);
+    }
+  }, [actionsDisabled]);
+  useEffect(() => {
+    refreshCards(filterCards);
   }, []);
   useEffect(() => {
     Geolocation.requestAuthorization();
@@ -67,6 +68,18 @@ const Home = ({navigation}) => {
       },
     );
   }, []);
+  useEffect(() => {
+    setUser({
+      ...user,
+      recycled: recycled,
+    });
+  }, [recycled]);
+  useEffect(() => {
+    setUser({
+      ...user,
+      saved: saved,
+    });
+  }, [saved]);
   const dontShowLocationRequest = () => {
     console.log("Don't show again");
   };
@@ -76,51 +89,125 @@ const Home = ({navigation}) => {
 
   // Card Maintainence
 
+  const refreshCards = filterFunction => {
+    getCards()
+      .then(res => {
+        setCards(res.filter(filterFunction).sort(sortCardsByMatch));
+      })
+      .catch(err => console.log(err));
+  };
+
+  const filterCards = card => {
+    /*
+      Return if
+        - User has saved and card is not in saved
+        - User has recycled and card is not in recycled
+     */
+    const recycledEmpty = recycled.length === 0;
+    const savedEmpty = saved.length === 0;
+    if (savedEmpty && recycledEmpty) {
+      return true;
+    } else if (!savedEmpty && recycledEmpty) {
+      // Has saved but not recycled
+      return !saved.includes(card.docID);
+    } else if (savedEmpty && !recycledEmpty) {
+      // Has recycled but not saved
+      return !recycled.includes(card.docID);
+    } else {
+      return !saved.includes(card.docID) && !recycled.includes(card.docID);
+    }
+  };
+
+  const filterCardsRefreshed = card => {
+    /*
+      Return if
+        - User has saved and card is not in saved
+        - User has recycled and card is not in recycled
+     */
+    const recycledEmpty = true;
+    const savedEmpty = saved.length === 0;
+    if (savedEmpty && recycledEmpty) {
+      return true;
+    } else if (!savedEmpty && recycledEmpty) {
+      // Has saved but not recycled
+      return !saved.includes(card.docID);
+    } else if (savedEmpty && !recycledEmpty) {
+      // Has recycled but not saved
+      return !recycled.includes(card.docID);
+    } else {
+      return !saved.includes(card.docID) && !recycled.includes(card.docID);
+    }
+  };
+
+  const sortCardsByMatch = (card1, card2) => {
+    /*
+      Takes in card1 and card2
+        - point is given to card if card tag is in user interests
+        - card with more points is greater than card with less points
+     */
+    const interests = user.interests ? user.interests : [];
+
+    const tags1 = card1.tags;
+
+    const intersection1 = tags1.filter(tag => interests.includes(tag));
+    const tagMatchLevel1 = intersection1.length / card1.tags.length;
+    // Tag Match level of 1 means all card tags are in user interests
+    const interestsMatchLevel1 = intersection1.length / interests.length;
+    // Interest Match level of 1 means that all user interests are in card tags
+    const overallMatch1 = tagMatchLevel1 * interestsMatchLevel1;
+
+    const tags2 = card2.tags;
+    const intersection2 = tags2.filter(tag => interests.includes(tag));
+    const tagMatchLevel2 = intersection2.length / card2.tags.length;
+    const interestsMatchLevel2 = intersection2.length / interests.length;
+    const overallMatch2 = tagMatchLevel2 * interestsMatchLevel2;
+
+    return overallMatch1 < overallMatch2;
+  };
+
   const handleSave = card => {
+    setActionsDisabled(true);
     ReactNativeHapticFeedback.trigger('notificationSuccess');
-    setUser({
-      ...user,
-      saved: [...(user.saved ? [...user.saved] : []), card.docID],
-    });
+    setSaved(prevState => [...prevState, card.docID]);
     return true;
   };
   const handleRecycle = card => {
+    setActionsDisabled(true);
     ReactNativeHapticFeedback.trigger('soft');
-    setUser({
-      ...user,
-      recycled: [...(user.recycled ? [...user.recycled] : []), card.docID],
-    });
+    setRecycled(prevState => [...prevState, card.docID]);
     return true;
   };
-  const handleMaybe = card => {
-    console.log('navigating');
-    navigation.navigate('CardDetailView', {
-      card: card,
-    });
-    return true;
+  const handleUnrecycle = () => {
+    setRecycled([]);
+    refreshCards(filterCardsRefreshed);
   };
   return (
     <View display="flex" px={4} pb={2} flex={1}>
       {!cards ? (
-        <Spinner color="primary.500" />
+        <Spinner my="auto" mx="auto" color="primary.500" />
       ) : (
         <SwipeCards
           ref={swiperRef}
           style={{alignItems: 'stretch', flexGrow: 1, paddingTop: 20}}
           cards={cards}
+          cardRemoved={card => setCurrentIdx(card + 1)}
           renderCard={card => (
-            <Card card={card} currentLocation={currentLocation} />
+            <Card
+              card={card}
+              currentLocation={currentLocation}
+              navigation={navigation}
+            />
           )}
           keyExtractor={cardData => cardData.docID}
           actions={{
             nope: {onAction: handleRecycle, show: false},
             yup: {onAction: handleSave, show: false},
-            maybe: {onAction: handleMaybe, show: false},
           }}
-          renderNoMoreCards={NoMoreCards}
+          renderNoMoreCards={() => (
+            <NoMoreCards handleUnrecycle={handleUnrecycle} />
+          )}
           showYup={false}
           showNope={false}
-          hasMaybeAction
         />
       )}
       {cards && cards.length !== 0 && (
@@ -130,13 +217,17 @@ const Home = ({navigation}) => {
           justifyContent="center"
           p={3}
           w="100%">
-          <Pressable
+          <Button
+            isDisabled={actionsDisabled}
+            p={0}
+            m={0}
             style={styles.actionButton}
-            _light={{bg: 'muted.100', shadow: 2}}
-            _dark={{bg: 'muted.700', shadow: 3}}
+            _light={{bg: 'muted.100', shadow: 2, _pressed: {bg: 'muted.200'}}}
+            _dark={{bg: 'muted.700', shadow: 3, _pressed: {bg: 'muted.800'}}}
             onPress={() => {
               ReactNativeHapticFeedback.trigger('soft');
               swiperRef.current.swipeNope();
+              handleRecycle(cards[currentIdx]);
             }}>
             <FontAwesome5
               name="times"
@@ -144,37 +235,45 @@ const Home = ({navigation}) => {
               color={theme.colors.error['500']}
               size={30}
             />
-          </Pressable>
-          <Pressable
+          </Button>
+          <Button
+            p={0}
+            m={0}
             style={styles.actionButton}
-            _light={{bg: 'muted.100', shadow: 2}}
-            _dark={{bg: 'muted.700', shadow: 3}}
+            _light={{bg: 'muted.100', shadow: 2, _pressed: {bg: 'muted.200'}}}
+            _dark={{bg: 'muted.700', shadow: 3, _pressed: {bg: 'muted.800'}}}
             onPress={() => {
               ReactNativeHapticFeedback.trigger(
                 Platform.select({ios: 'impactHeavy', android: 'impactMedium'}),
               );
-              swiperRef.current.swipeMaybe();
+              navigation.navigate('CardDetailView', {
+                card: cards[currentIdx],
+              });
             }}>
             <FontAwesome5
               name="chevron-up"
               color={theme.colors.primary['500']}
               size={30}
             />
-          </Pressable>
-          <Pressable
+          </Button>
+          <Button
+            p={0}
+            m={0}
+            isDisabled={actionsDisabled}
             style={styles.actionButton}
-            _light={{bg: 'muted.100', shadow: 2}}
-            _dark={{bg: 'muted.700', shadow: 3}}
+            _light={{bg: 'muted.100', shadow: 2, _pressed: {bg: 'muted.200'}}}
+            _dark={{bg: 'muted.700', shadow: 3, _pressed: {bg: 'muted.800'}}}
             onPress={() => {
               ReactNativeHapticFeedback.trigger('notificationSuccess');
               swiperRef.current.swipeYup();
+              handleSave(cards[currentIdx]);
             }}>
             <FontAwesome5
               name="check"
               color={theme.colors.green['500']}
               size={30}
             />
-          </Pressable>
+          </Button>
         </HStack>
       )}
     </View>

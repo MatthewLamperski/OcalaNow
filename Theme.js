@@ -52,7 +52,6 @@ export const appTheme = extendTheme({
     Text: {
       baseStyle: (props: any) => {
         return {
-          color: themeTools.mode('red.300', 'red.100')(props),
           fontWeight: 100,
         };
       },
@@ -92,6 +91,22 @@ export const appTheme = extendTheme({
         subtle: {
           _text: {fontWeight: 200, fontSize: 'sm'},
         },
+      },
+    },
+    ActionsheetItem: {
+      baseStyle: (props: any) => {
+        return {
+          backgroundColor: themeTools.mode('muted.100', 'muted.700')(props),
+          _text: {fontWeight: 200, fontSize: 'lg'},
+          _pressed: {opacity: 0.7},
+        };
+      },
+    },
+    ActionsheetContent: {
+      baseStyle: (props: any) => {
+        return {
+          backgroundColor: themeTools.mode('muted.100', 'muted.700')(props),
+        };
       },
     },
     Input: {

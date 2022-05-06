@@ -8,7 +8,7 @@
 
 import type {Node} from 'react';
 import React, {useEffect, useState} from 'react';
-import {StyleSheet, useColorScheme} from 'react-native';
+import {LogBox, StyleSheet, useColorScheme} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import {NativeBaseProvider} from 'native-base/src/core/NativeBaseProvider';
 import {appTheme} from './Theme';
@@ -111,6 +111,7 @@ const App: () => Node = () => {
   };
   // Effects
   useEffect(() => {
+    LogBox.ignoreAllLogs();
     // Run on App start
     configureGoogleSignIn();
   }, []);
