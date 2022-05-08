@@ -7,7 +7,7 @@
  */
 
 import type {Node} from 'react';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {LogBox, StyleSheet, useColorScheme} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import {NativeBaseProvider} from 'native-base/src/core/NativeBaseProvider';
@@ -24,6 +24,7 @@ import {toastConfig} from './ToastConfig';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import {getUser, updateUser} from './FireFunctions';
 import AppStack from './Routes/AppStack/AppStack';
+import analytics from '@react-native-firebase/analytics';
 
 const App: () => Node = () => {
   const colorScheme = useColorScheme();
@@ -34,6 +35,9 @@ const App: () => Node = () => {
   const [initializing, setInitializing] = useState(true);
   const [notification, setNotification] = useState();
   const [error, setError] = useState();
+  const [currentLocation, setCurrentLocation] = useState();
+  const routeNameRef = useRef(null);
+  const navigationRef = useRef(null);
   const context = {
     user,
     setUser,
@@ -42,6 +46,8 @@ const App: () => Node = () => {
     error,
     setError,
     userBank,
+    currentLocation,
+    setCurrentLocation,
   };
   // Functions
   const configureGoogleSignIn = () => {
@@ -84,6 +90,9 @@ const App: () => Node = () => {
     if (authUser) {
       // Check user bank to see if user obj exists
       if (authFlag) {
+        analytics()
+          .setUserId(authUser.uid)
+          .catch(err => console.log(err));
         authFlag = false;
         try {
           let currentUser = await userBank[authUser.uid];
@@ -177,7 +186,24 @@ const App: () => Node = () => {
   return (
     <AppContext.Provider value={context}>
       <NativeBaseProvider theme={appTheme}>
-        <NavigationContainer>
+        <NavigationContainer
+          ref={navigationRef}
+          onReady={() => {
+            routeNameRef.current = navigationRef.current.getCurrentRoute().name;
+          }}
+          onStateChange={async () => {
+            const previousRouteName = routeNameRef.current;
+            const currentRouteName =
+              navigationRef.current.getCurrentRoute().name;
+            if (previousRouteName !== currentRouteName) {
+              await analytics().logScreenView({
+                screen_name: currentRouteName,
+                screen_class: currentRouteName,
+              });
+            }
+            console.log(previousRouteName, currentRouteName);
+            routeNameRef.current = currentRouteName;
+          }}>
           <Stack.Navigator>
             {user ? (
               <Stack.Screen

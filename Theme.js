@@ -60,7 +60,6 @@ export const appTheme = extendTheme({
       baseStyle: ({onButtonPress}) => {
         return {
           onPress: () => {
-            console.log('Button Pressed');
             ReactNativeHapticFeedback.trigger(
               Platform.select({ios: 'impactHeavy', android: 'impactMedium'}),
             );

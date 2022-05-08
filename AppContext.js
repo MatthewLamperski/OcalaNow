@@ -9,4 +9,6 @@ export const AppContext = React.createContext({
   error: undefined,
   setError: () => {},
   userBank: undefined,
+  currentLocation: undefined,
+  setCurrentLocation: () => {},
 });

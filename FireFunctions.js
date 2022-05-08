@@ -3,9 +3,210 @@ import storage from '@react-native-firebase/storage';
 import auth from '@react-native-firebase/auth';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import appleAuth from '@invertase/react-native-apple-authentication';
+import analytics from '@react-native-firebase/analytics';
+import openMap from 'react-native-open-maps';
 
 // Random Helper Functions
 
+export const getNextEventDate = card => {
+  if (card.type !== 'event') {
+    return '';
+  } else {
+    let date = card.event.startTime.toDate();
+    let frequency = card.event.frequency;
+    if (frequency === 'once') {
+      const month = date.toLocaleString('default', {month: 'long'});
+      const day = date.toLocaleString('default', {day: 'numeric'});
+      const time = date.toLocaleString('default', {timeStyle: 'short'});
+      return `${month} ${day}, ${time}`;
+    } else if (frequency === 'weekly') {
+      let now = new Date();
+      console.log(card.docID, frequency, date > now);
+      if (date > now) {
+        const month = date.toLocaleString('default', {month: 'long'});
+        const day = date.toLocaleString('default', {day: 'numeric'});
+        const time = date.toLocaleString('default', {timeStyle: 'short'});
+        return `${month} ${day}, ${time}`;
+      } else {
+        // date already passed, get the next date
+        let newDate = date;
+        while (newDate < now) {
+          newDate = newDate.setDate(date.getDate() + 7);
+        }
+        const month = date.toLocaleString('default', {month: 'long'});
+        const day = date.toLocaleString('default', {day: 'numeric'});
+        const time = date.toLocaleString('default', {timeStyle: 'short'});
+        return `${month} ${day}, ${time}`;
+      }
+    } else if (frequency === 'biweekly') {
+      let now = new Date();
+      if (date > now) {
+        const month = date.toLocaleString('default', {month: 'long'});
+        const day = date.toLocaleString('default', {day: 'numeric'});
+        const time = date.toLocaleString('default', {timeStyle: 'short'});
+        return `${month} ${day}, ${time}`;
+      } else {
+        // date already passed, get the next date
+        let newDate = date;
+        while (newDate < now) {
+          newDate = newDate.setDate(date.getDate() + 14);
+        }
+        const month = date.toLocaleString('default', {month: 'long'});
+        const day = date.toLocaleString('default', {day: 'numeric'});
+        const time = date.toLocaleString('default', {timeStyle: 'short'});
+        return `${month} ${day}, ${time}`;
+      }
+    } else if (frequency) {
+      let now = new Date();
+      if (date > now) {
+        const month = date.toLocaleString('default', {month: 'long'});
+        const day = date.toLocaleString('default', {day: 'numeric'});
+        const time = date.toLocaleString('default', {timeStyle: 'short'});
+        return `${month} ${day}, ${time}`;
+      } else {
+        // date already passed, get the next date
+        let newDate = date;
+        while (newDate < now) {
+          newDate = newDate.setDate(date.getDate() + Number(frequency));
+        }
+        const month = date.toLocaleString('default', {month: 'long'});
+        const day = date.toLocaleString('default', {day: 'numeric'});
+        const time = date.toLocaleString('default', {timeStyle: 'short'});
+        return `${month} ${day}, ${time}`;
+      }
+    } else {
+      const month = date.toLocaleString('default', {month: 'long'});
+      const day = date.toLocaleString('default', {day: 'numeric'});
+      const time = date.toLocaleString('default', {timeStyle: 'short'});
+      return `${month} ${day}, ${time}`;
+    }
+  }
+};
+
+export const getTimeUntilNextUse = (card, user) => {
+  if (!user.used) {
+    return 0;
+  } else {
+    let usedDeals = user.used;
+    // if deal is not even in users used
+    if (!usedDeals.map(used => used.deal).includes(card.docID)) {
+      return true;
+    }
+    // If at this point, user has used this deal before
+    // check if cooldown timer is up
+    if (!card.deal.cooldown) {
+      return true;
+    } else {
+      let cooldown = Number(card.deal.cooldown);
+      let thisDealUsedArr = usedDeals.filter(used => used.deal === card.docID);
+      let lastDealUsed = thisDealUsedArr
+        .sort((used1, used2) => {
+          return used1.usedOn.toDate() < used2.usedOn.toDate();
+        })[0]
+        .usedOn.toDate();
+      const now = new Date();
+      const daysSinceLastUse = (now - lastDealUsed) / (1000 * 60 * 60 * 24);
+      return cooldown - daysSinceLastUse;
+    }
+  }
+};
+export const activated = (card, user) => {
+  if (card.type === 'event') {
+    if (!user.going) {
+      return true;
+    } else {
+      return !user.going.includes(card.docID);
+    }
+  } else if (card.type === 'info') {
+    return true;
+  } else if (card.type === 'deal') {
+    if (!user.used) {
+      return true;
+    } else {
+      let usedDeals = user.used;
+      // if deal is not even in users used
+      if (!usedDeals.map(used => used.deal).includes(card.docID)) {
+        return true;
+      }
+      // If at this point, user has used this deal before
+      // check if cooldown timer is up
+      if (!card.deal.cooldown) {
+        return true;
+      } else {
+        let cooldown = Number(card.deal.cooldown);
+        let thisDealUsedArr = usedDeals.filter(
+          used => used.deal === card.docID,
+        );
+        let lastDealUsed = thisDealUsedArr
+          .sort((used1, used2) => {
+            return used1.usedOn.toDate() < used2.usedOn.toDate();
+          })[0]
+          .usedOn.toDate();
+        const now = new Date();
+        const daysSinceLastUse = (now - lastDealUsed) / (1000 * 60 * 60 * 24);
+        console.log(daysSinceLastUse < cooldown);
+        return daysSinceLastUse > cooldown;
+      }
+    }
+  }
+};
+export const openNavigation = (address, uid, card) => {
+  analytics()
+    .logEvent(`navigate_to_${card.type}`, {
+      uid,
+      card: card.docID,
+    })
+    .then(() => console.log(`navigate_to_${card.type} logged`))
+    .catch(err => console.log(err));
+  openMap({
+    end: address,
+    navigate: true,
+  });
+};
+export const useDeal = (card, user, setUser) => {
+  analytics()
+    .logEvent('used_deal', {
+      deal: card.docID,
+      uid: user.uid,
+    })
+    .then(() => console.log('used_deal logged'));
+  const now = firestore.Timestamp.now();
+  const newUsed = {
+    usedOn: now,
+    deal: card.docID,
+  };
+  setUser(prevState => ({
+    ...prevState,
+    used: prevState.used ? [...prevState.used, newUsed] : [newUsed],
+  }));
+};
+export const goToEvent = (card, user, setUser) => {
+  analytics()
+    .logEvent('going_to_event', {
+      event: card.docID,
+      uid: user.uid,
+    })
+    .then(() => console.log('going_to_event logged'));
+  setUser(prevState => ({
+    ...prevState,
+    going: prevState.going ? [...prevState.going, card.docID] : [card.docID],
+  }));
+};
+export const unGoToEvent = (card, user, setUser) => {
+  analytics()
+    .logEvent('ungo_to_event', {
+      event: card.docID,
+      uid: user.uid,
+    })
+    .then(() => console.log('ungo_to_event logged'));
+  setUser(prevState => ({
+    ...prevState,
+    going: [
+      ...prevState.going.slice(0, prevState.going.indexOf(card.docID)),
+      ...prevState.going.slice(prevState.going.indexOf(card.docID) + 1),
+    ],
+  }));
+};
 export const getBrightness = color => {
   // Variables for red, green, blue values
   let r, g, b, hsp;
@@ -213,6 +414,15 @@ export const getPicURL = logo => {
       .ref(`logos/${logo}.png`)
       .getDownloadURL()
       .then(url => resolve(url))
+      .catch(err => reject(err));
+  });
+};
+
+export const logEvent = (name, event) => {
+  return new Promise((resolve, reject) => {
+    analytics()
+      .logEvent(name, event)
+      .then(() => resolve())
       .catch(err => reject(err));
   });
 };

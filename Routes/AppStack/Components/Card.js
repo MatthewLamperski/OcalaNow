@@ -1,6 +1,10 @@
 import React, {useContext, useEffect, useRef, useState} from 'react';
 import {HStack, Pressable, Text, useTheme, View, VStack} from 'native-base';
-import {getAsset} from '../../../FireFunctions';
+import {
+  getAsset,
+  getNextEventDate,
+  openNavigation,
+} from '../../../FireFunctions';
 import {
   ActivityIndicator,
   Alert,
@@ -15,7 +19,7 @@ import {getDistance} from 'geolib';
 import {AppContext} from '../../../AppContext';
 import MapView, {Marker} from 'react-native-maps';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
-import openMap from 'react-native-open-maps';
+import analytics from '@react-native-firebase/analytics';
 
 const Card = ({card, currentLocation, navigation}) => {
   const theme = useTheme();
@@ -25,6 +29,14 @@ const Card = ({card, currentLocation, navigation}) => {
   const [loaded, setLoaded] = useState(false);
   const mapRef = useRef(null);
   const fadeVal = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    analytics()
+      .logEvent('card_seen', {
+        card: card.docID,
+        uid: user.uid,
+      })
+      .then(() => console.log('card_seen logged'));
+  }, []);
   useEffect(() => {
     getAsset('logo', card.docID)
       .then(url => setLogo(url))
@@ -89,18 +101,17 @@ const Card = ({card, currentLocation, navigation}) => {
             },
           ];
       mapRef.current.fitToCoordinates(coordinates, {
-        edgePadding: {top: 15, bottom: 15, left: 100, right: 100},
+        edgePadding: currentLocation
+          ? {top: 15, bottom: 15, left: 100, right: 100}
+          : {
+              top: 100,
+              bottom: 100,
+              left: 100,
+              right: 100,
+            },
         animated: true,
       });
     }
-  };
-
-  const eventDate = () => {
-    const date = card.event.startTime.toDate();
-    const month = date.toLocaleString('default', {month: 'long'});
-    const day = date.toLocaleString('default', {day: 'numeric'});
-    const time = date.toLocaleString('default', {timeStyle: 'short'});
-    return `${month} ${day}, ${time}`;
   };
 
   const address = () => {
@@ -193,10 +204,7 @@ const Card = ({card, currentLocation, navigation}) => {
                     text: 'Open',
                     style: 'default',
                     onPress: () => {
-                      openMap({
-                        end: address(),
-                        navigate: true,
-                      });
+                      openNavigation(address(), user.uid, card);
                     },
                   },
                 ],
@@ -266,18 +274,22 @@ const Card = ({card, currentLocation, navigation}) => {
                   color={colorScheme === 'dark' ? 'white' : 'black'}
                 />
                 <Text shadow={3} fontWeight={300}>
-                  {eventDate()}
+                  {getNextEventDate(card)}
                 </Text>
               </HStack>
             )}
-            <FontAwesome5
-              name={getDistanceBetween() > 1.5 ? 'car' : 'walking'}
-              size={16}
-              color={colorScheme === 'dark' ? 'white' : 'black'}
-            />
-            <Text shadow={3} fontWeight={300}>
-              {getDistanceBetween()} mi
-            </Text>
+            {currentLocation && (
+              <>
+                <FontAwesome5
+                  name={getDistanceBetween() > 1.5 ? 'car' : 'walking'}
+                  size={16}
+                  color={colorScheme === 'dark' ? 'white' : 'black'}
+                />
+                <Text shadow={3} fontWeight={300}>
+                  {getDistanceBetween()} mi
+                </Text>
+              </>
+            )}
           </HStack>
           {card.tags && (
             <HStack flexWrap="wrap" space={2} py={1}>
@@ -286,7 +298,9 @@ const Card = ({card, currentLocation, navigation}) => {
                   key={JSON.stringify(tag)}
                   onPress={() => {
                     ReactNativeHapticFeedback.trigger('soft');
-                    console.log(`Navigate to ${tag}`);
+                    navigation.navigate('TagView', {
+                      tag,
+                    });
                   }}>
                   <HStack
                     space={1}

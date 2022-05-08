@@ -9,13 +9,14 @@ import {Alert, Linking, Platform, StyleSheet} from 'react-native';
 import NoMoreCards from './Components/NoMoreCards';
 import {getCards} from '../../FireFunctions';
 import Geolocation from '@react-native-community/geolocation';
+import analytics from '@react-native-firebase/analytics';
 
 const Home = ({navigation}) => {
-  const {user, setUser, setNotification} = useContext(AppContext);
+  const {user, setUser, setNotification, currentLocation, setCurrentLocation} =
+    useContext(AppContext);
   const theme = useTheme();
   const [cards, setCards] = useState();
   const swiperRef = useRef(null);
-  const [currentLocation, setCurrentLocation] = useState();
   const [saved, setSaved] = useState(user.saved ? user.saved : []);
   const [recycled, setRecycled] = useState(user.recycled ? user.recycled : []);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -169,15 +170,34 @@ const Home = ({navigation}) => {
     setActionsDisabled(true);
     ReactNativeHapticFeedback.trigger('notificationSuccess');
     setSaved(prevState => [...prevState, card.docID]);
+    analytics()
+      .logEvent('card_swipe_right', {
+        type: card.type,
+        docID: card.docID,
+        uid: user.uid,
+      })
+      .then(() => console.log('card_swipe_right logged'));
     return true;
   };
   const handleRecycle = card => {
     setActionsDisabled(true);
     ReactNativeHapticFeedback.trigger('soft');
     setRecycled(prevState => [...prevState, card.docID]);
+    analytics()
+      .logEvent('card_swipe_left', {
+        type: card.type,
+        docID: card.docID,
+        uid: user.uid,
+      })
+      .then(() => console.log('card_swipe_left logged'));
     return true;
   };
   const handleUnrecycle = () => {
+    analytics()
+      .logEvent('unrecycle', {
+        uid: user.uid,
+      })
+      .then(() => console.log('unrecycle logged'));
     setRecycled([]);
     refreshCards(filterCardsRefreshed);
   };
