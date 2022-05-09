@@ -6,6 +6,7 @@ import {useTheme} from 'native-base';
 import Home from './Home';
 import Discover from './Discover';
 import Profile from './Profile';
+import Feed from './Feed';
 
 const Tab = createBottomTabNavigator();
 
@@ -17,6 +18,7 @@ const TabNavigator = () => {
       screenOptions={({route}) => screenOptions({route, colorScheme, theme})}>
       <Tab.Screen name="Home" component={Home} options={options} />
       <Tab.Screen name="Discover" component={Discover} options={options} />
+      <Tab.Screen name="Feed" component={Feed} options={options} />
       <Tab.Screen name="Profile" component={Profile} options={options} />
     </Tab.Navigator>
   );
@@ -49,10 +51,18 @@ const screenOptions = ({route, colorScheme, theme}) => ({
       iconName = focused ? 'home' : 'home-outline';
     } else if (route.name === 'Discover') {
       iconName = focused ? 'compass' : 'compass-outline';
+    } else if (route.name === 'Feed') {
+      iconName = focused ? 'newspaper' : 'newspaper-outline';
     } else if (route.name === 'Profile') {
       iconName = focused ? 'person' : 'person-outline';
     }
-    return <Ionicons name={iconName} color={iconColor} size={size + 2} />;
+    return (
+      <Ionicons
+        name={iconName}
+        color={iconColor}
+        size={focused ? size + 4 : size}
+      />
+    );
   },
   tabBarShowLabel: false,
   lazy: true,

@@ -51,6 +51,7 @@ const CardDetailView = ({route, navigation}) => {
     useContext(AppContext);
   const [logo, setLogo] = useState();
   const [loaded, setLoaded] = useState(false);
+  const [buttonPressed, setButtonPressed] = useState(false);
   const mapRef = useRef(null);
   const fadeVal = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -64,7 +65,10 @@ const CardDetailView = ({route, navigation}) => {
   const enableLocationServices = () => {
     Linking.openSettings();
   };
-  let active = activated(card, user);
+  const [active, setActive] = useState(activated(card, user));
+  useEffect(() => {
+    setActive(activated(card, user));
+  }, [buttonPressed]);
   const lat = () => {
     switch (card.type) {
       case 'info':
@@ -201,18 +205,15 @@ const CardDetailView = ({route, navigation}) => {
         case 'info':
           return 'Take Me There';
         case 'deal':
-          return ` Redeem again ${
-            getTimeUntilNextUse(card, user) < 1
-              ? 'tomorrow'
-              : `in ${getTimeUntilNextUse(card, user).toFixed(0)} days`
-          }`;
+          return getTimeUntilNextUse(card, user);
         case 'event':
           return 'Not going?';
       }
     }
   };
   const onButtonPress = () => {
-    console.log(card.docID);
+    setButtonPressed(!buttonPressed);
+
     if (active) {
       if (card.type === 'info') {
         openNavigation(address(), user.uid, card);

@@ -45,6 +45,7 @@ const SocialLink = ({social}) => {
     const gradient_codes = ['#fccc63', '#fbad50', '#cd486b', '#8a3ab9'];
     return (
       <Pressable
+        mx={2}
         onPress={() => {
           ReactNativeHapticFeedback.trigger('soft');
           Linking.openURL(social.link);
@@ -72,6 +73,7 @@ const SocialLink = ({social}) => {
   } else {
     return (
       <Pressable
+        mx={2}
         onPress={() => {
           ReactNativeHapticFeedback.trigger('soft');
           Linking.openURL(social.link);

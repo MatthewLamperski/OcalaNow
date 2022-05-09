@@ -1,22 +1,30 @@
-import React, {useContext, useEffect, useRef, useState} from 'react';
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import {getCards, getTags} from '../../FireFunctions';
 import {
+  Button,
   HStack,
   PresenceTransition,
   Pressable,
   ScrollView,
+  Spinner,
   Text,
   useTheme,
   View,
 } from 'native-base';
 import MapView, {Circle, Marker} from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
-import {Alert, Dimensions, Linking, useColorScheme} from 'react-native';
+import {Alert, Linking, useColorScheme} from 'react-native';
 import {AppContext} from '../../AppContext';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
-import Carousel from 'react-native-snap-carousel';
-import CarouselCard from './Components/CarouselCard';
+import BottomSheet, {BottomSheetScrollView} from '@gorhom/bottom-sheet';
+import BottomSheetCard from './Components/BottomSheetCard';
 
 const Discover = ({navigation}) => {
   const {setNotification, user} = useContext(AppContext);
@@ -27,11 +35,17 @@ const Discover = ({navigation}) => {
   const [tags, setTags] = useState();
   const [currentLocation, setCurrentLocation] = useState();
   const [centerRegion, setCenterRegion] = useState();
-  const [showCarousel, setShowCarousel] = useState(false);
   const [activeFilters, setActiveFilters] = useState([]);
-  const [currentRegion, setCurrentRegion] = useState();
+  const [currentCard, setCurrentCard] = useState();
   const mapRef = useRef(null);
-  const carouselRef = useRef(null);
+
+  //Bottom Sheet stuff
+  const bottomSheetRef = useRef(null);
+  const [snapPoints, setSnapPoints] = useState(['10%', '30%', 450]);
+  const handleSheetChanges = useCallback(idx => {
+    console.log('handleSheetChanges', idx);
+  }, []);
+
   const getCurrentLocation = (title, message) => {
     Geolocation.requestAuthorization();
     Geolocation.getCurrentPosition(
@@ -154,31 +168,15 @@ const Discover = ({navigation}) => {
 
     return overallMatch1 < overallMatch2;
   };
-  const onMarkerPress = ({docID}) => {
-    const idx = cards.map(thisCard => thisCard.docID).indexOf(docID);
-    if (!showCarousel) {
-      setShowCarousel(idx);
-    }
+  const onMarkerPress = card => {
+    const idx = cards.map(thisCard => thisCard.docID).indexOf(card.docID);
+    console.log(cards[idx].title);
+    setCurrentCard(cards[idx]);
+
     ReactNativeHapticFeedback.trigger('soft');
-    if (carouselRef.current) {
-      carouselRef.current.snapToItem(idx, false);
-    }
-    console.log(idx);
-  };
-  const zoomToMarker = idx => {
-    const newRegion = {
-      latitude: lat(cards[idx]),
-      longitude: lng(cards[idx]),
-      latitudeDelta: 0.04,
-      longitudeDelta: 0.02,
-    };
-    if (mapRef.current) {
-      mapRef.current.animateToRegion(newRegion);
-    }
   };
   const onPressWalkingDistance = () => {
     ReactNativeHapticFeedback.trigger('soft');
-    setShowCarousel();
     if (currentLocation) {
       mapRef.current.animateToRegion({
         latitude: currentLocation.lat,
@@ -215,6 +213,11 @@ const Discover = ({navigation}) => {
     return intersection.length >= 1;
   };
   useEffect(() => {
+    if (cards && !currentCard) {
+      setCurrentCard(cards[Math.floor(Math.random() * cards.length)]);
+    }
+  }, [cards]);
+  useEffect(() => {
     getTags()
       .then(tags => setTags(tags))
       .catch(err => console.log(err));
@@ -224,6 +227,11 @@ const Discover = ({navigation}) => {
       .then(cards => setCards(cards.sort(sortCardsByMatch)))
       .catch(err => console.log(err));
   }, []);
+  useEffect(() => {
+    if (currentCard) {
+      bottomSheetRef.current.snapToIndex(1);
+    }
+  }, [currentCard]);
   useEffect(() => {
     if (currentLocation) {
       setCenterRegion({
@@ -253,6 +261,7 @@ const Discover = ({navigation}) => {
   return (
     <View style={{flex: 1}}>
       <MapView
+        onRegionChange={() => bottomSheetRef.current.collapse()}
         showsCompass={false}
         showsTraffic={false}
         ref={mapRef}
@@ -286,9 +295,12 @@ const Discover = ({navigation}) => {
         {cards &&
           (displayedCards ? displayedCards : cards).map(card => (
             <Marker
+              onPress={() => {
+                onMarkerPress(card);
+              }}
               key={card.docID}
               coordinate={{latitude: lat(card), longitude: lng(card)}}>
-              <Pressable onPress={() => onMarkerPress(card)}>
+              <Pressable>
                 <PresenceTransition
                   initial={{opacity: 0}}
                   visible
@@ -308,70 +320,6 @@ const Discover = ({navigation}) => {
             </Marker>
           ))}
       </MapView>
-      <View py={3} position="absolute" bg="transparent" bottom={0} w="100%">
-        <Carousel
-          ref={carouselRef}
-          data={cards}
-          renderItem={({item}) => (
-            <CarouselCard
-              carouselRef={carouselRef}
-              setShowCarousel={setShowCarousel}
-              navigation={navigation}
-              card={item}
-            />
-          )}
-          firstItem={showCarousel ? showCarousel : 0}
-          sliderWidth={Dimensions.get('window').width}
-          itemWidth={Dimensions.get('window').width - 20}
-          onSnapToItem={idx => zoomToMarker(idx)}
-        />
-        <HStack px={3} p={1} justifyContent="space-between" alignItems="center">
-          <View
-            _light={{bg: 'white'}}
-            _dark={{bg: 'muted.800'}}
-            shadow={3}
-            p={1}
-            rounded="100">
-            <Pressable
-              p={2}
-              justifyContent="center"
-              alignItems="center"
-              onPress={() => {
-                ReactNativeHapticFeedback.trigger('soft');
-                carouselRef.current.snapToPrev();
-              }}>
-              <FontAwesome5
-                name="chevron-left"
-                color={colorScheme === 'dark' ? 'white' : 'black'}
-                size={20}
-              />
-            </Pressable>
-          </View>
-          <View
-            _light={{bg: 'white'}}
-            _dark={{bg: 'muted.800'}}
-            justifyContent="center"
-            alignItems="center"
-            shadow={3}
-            p={1}
-            rounded="100">
-            <Pressable
-              p={2}
-              justifyContent="center"
-              alignItems="center"
-              onPress={() => {
-                ReactNativeHapticFeedback.trigger('soft');
-                carouselRef.current.snapToNext();
-              }}>
-              <FontAwesome5
-                name="chevron-right"
-                color={colorScheme === 'dark' ? 'white' : 'black'}
-                size={20}
-              />
-            </Pressable>
-          </View>
-        </HStack>
-      </View>
       <ScrollView
         showsHorizontalScrollIndicator={false}
         style={{position: 'absolute', top: 0, display: 'flex'}}
@@ -446,6 +394,72 @@ const Discover = ({navigation}) => {
             ))}
         </HStack>
       </ScrollView>
+      <BottomSheet
+        style={{
+          backgroundColor:
+            colorScheme === 'dark'
+              ? theme.colors.muted['800']
+              : theme.colors.muted['100'],
+          borderTopRightRadius: 15,
+          borderTopLeftRadius: 15,
+        }}
+        handleStyle={{
+          backgroundColor:
+            colorScheme === 'dark'
+              ? theme.colors.muted['800']
+              : theme.colors.muted['100'],
+          borderTopRightRadius: 15,
+          borderTopLeftRadius: 15,
+        }}
+        handleIndicatorStyle={{
+          backgroundColor:
+            colorScheme === 'dark'
+              ? theme.colors.muted['100']
+              : theme.colors.muted['800'],
+        }}
+        ref={bottomSheetRef}
+        index={1}
+        snapPoints={snapPoints}
+        onChange={handleSheetChanges}>
+        {currentCard ? (
+          <View position="relative" flex={1}>
+            <BottomSheetScrollView
+              style={{
+                backgroundColor:
+                  colorScheme === 'dark'
+                    ? theme.colors.muted['800']
+                    : theme.colors.muted['100'],
+              }}>
+              <BottomSheetCard
+                currentLocation={currentLocation}
+                card={currentCard}
+                navigation={navigation}
+              />
+            </BottomSheetScrollView>
+            <View
+              py={2}
+              _dark={{borderTopWidth: 1, borderColor: 'muted.700'}}
+              w="100%"
+              shadow={3}
+              position="absolute"
+              bottom={0}>
+              <Button
+                borderRadius={100}
+                onButtonPress={() => {
+                  navigation.navigate('CardDetailView', {
+                    card: currentCard,
+                  });
+                }}>
+                Show me more
+              </Button>
+            </View>
+          </View>
+        ) : (
+          <View p={4} flex={1}>
+            <Spinner />
+          </View>
+        )}
+      </BottomSheet>
     </View>
   );
 };

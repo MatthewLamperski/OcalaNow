@@ -25,7 +25,7 @@ const CarouselCard = ({card, navigation}) => {
       .catch(err => console.log(err));
   }, []);
   return (
-    <View justifyContent="flex-end" bg="transparent" m={2} flex={1}>
+    <View justifyContent="flex-start" bg="transparent" m={2} flex={1}>
       <Pressable
         onPress={() => {
           ReactNativeHapticFeedback.trigger('soft');
@@ -59,6 +59,7 @@ const CarouselCard = ({card, navigation}) => {
                 overflow: 'hidden',
               }}>
               <Image
+                key={logo ? logo : 'ocalanow.app'}
                 source={{uri: logo}}
                 style={{
                   height: '100%',

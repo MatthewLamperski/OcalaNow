@@ -8,6 +8,36 @@ import openMap from 'react-native-open-maps';
 
 // Random Helper Functions
 
+export const getNextFeedDate = () => {
+  // Saddle up Friday @ noon
+  // Out the gate Monday @ 8 AM
+  let nextDate = new Date();
+  while (nextDate.getDay() !== 1 && nextDate.getDay() !== 5) {
+    nextDate.setDate(nextDate.getDate() + 1);
+  }
+  if (nextDate.getDay() === 1) {
+    return new Date(
+      nextDate.getFullYear(),
+      nextDate.getMonth(),
+      nextDate.getDate(),
+      8,
+      0,
+      0,
+      0,
+    );
+  } else if (nextDate.getDay() === 5) {
+    return new Date(
+      nextDate.getFullYear(),
+      nextDate.getMonth(),
+      nextDate.getDate(),
+      12,
+      0,
+      0,
+      0,
+    );
+  }
+};
+
 export const getNextEventDate = card => {
   if (card.type !== 'event') {
     return '';
@@ -31,7 +61,7 @@ export const getNextEventDate = card => {
         // date already passed, get the next date
         let newDate = date;
         while (newDate < now) {
-          newDate = newDate.setDate(date.getDate() + 7);
+          newDate.setDate(newDate.getDate() + 7);
         }
         const month = date.toLocaleString('default', {month: 'long'});
         const day = date.toLocaleString('default', {day: 'numeric'});
@@ -49,7 +79,7 @@ export const getNextEventDate = card => {
         // date already passed, get the next date
         let newDate = date;
         while (newDate < now) {
-          newDate = newDate.setDate(date.getDate() + 14);
+          newDate.setDate(newDate.getDate() + 14);
         }
         const month = date.toLocaleString('default', {month: 'long'});
         const day = date.toLocaleString('default', {day: 'numeric'});
@@ -67,7 +97,7 @@ export const getNextEventDate = card => {
         // date already passed, get the next date
         let newDate = date;
         while (newDate < now) {
-          newDate = newDate.setDate(date.getDate() + Number(frequency));
+          newDate.setDate(newDate.getDate() + Number(frequency));
         }
         const month = date.toLocaleString('default', {month: 'long'});
         const day = date.toLocaleString('default', {day: 'numeric'});
@@ -90,12 +120,12 @@ export const getTimeUntilNextUse = (card, user) => {
     let usedDeals = user.used;
     // if deal is not even in users used
     if (!usedDeals.map(used => used.deal).includes(card.docID)) {
-      return true;
+      return 'Already redeemed';
     }
     // If at this point, user has used this deal before
     // check if cooldown timer is up
     if (!card.deal.cooldown) {
-      return true;
+      return 'Already redeemed';
     } else {
       let cooldown = Number(card.deal.cooldown);
       let thisDealUsedArr = usedDeals.filter(used => used.deal === card.docID);
@@ -106,7 +136,7 @@ export const getTimeUntilNextUse = (card, user) => {
         .usedOn.toDate();
       const now = new Date();
       const daysSinceLastUse = (now - lastDealUsed) / (1000 * 60 * 60 * 24);
-      return cooldown - daysSinceLastUse;
+      return `Redeem again in ${(cooldown - daysSinceLastUse).toFixed(1)} days`;
     }
   }
 };
@@ -131,7 +161,7 @@ export const activated = (card, user) => {
       // If at this point, user has used this deal before
       // check if cooldown timer is up
       if (!card.deal.cooldown) {
-        return true;
+        return false;
       } else {
         let cooldown = Number(card.deal.cooldown);
         let thisDealUsedArr = usedDeals.filter(
@@ -362,6 +392,19 @@ export const getCards = () => {
           querySnapshot.docs.map(doc => ({docID: doc.id, ...doc.data()})),
         );
       })
+      .catch(err => reject(err));
+  });
+};
+
+export const getCard = docID => {
+  return new Promise((resolve, reject) => {
+    firestore()
+      .collection('cards')
+      .doc(docID)
+      .get()
+      .then(docSnapshot =>
+        resolve({docID: docSnapshot.id, ...docSnapshot.data()}),
+      )
       .catch(err => reject(err));
   });
 };

@@ -25,6 +25,7 @@ import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import {getUser, updateUser} from './FireFunctions';
 import AppStack from './Routes/AppStack/AppStack';
 import analytics from '@react-native-firebase/analytics';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
 
 const App: () => Node = () => {
   const colorScheme = useColorScheme();
@@ -185,46 +186,49 @@ const App: () => Node = () => {
   const Stack = createNativeStackNavigator();
   return (
     <AppContext.Provider value={context}>
-      <NativeBaseProvider theme={appTheme}>
-        <NavigationContainer
-          ref={navigationRef}
-          onReady={() => {
-            routeNameRef.current = navigationRef.current.getCurrentRoute().name;
-          }}
-          onStateChange={async () => {
-            const previousRouteName = routeNameRef.current;
-            const currentRouteName =
-              navigationRef.current.getCurrentRoute().name;
-            if (previousRouteName !== currentRouteName) {
-              await analytics().logScreenView({
-                screen_name: currentRouteName,
-                screen_class: currentRouteName,
-              });
-            }
-            console.log(previousRouteName, currentRouteName);
-            routeNameRef.current = currentRouteName;
-          }}>
-          <Stack.Navigator>
-            {user ? (
-              <Stack.Screen
-                name="AppStack"
-                options={{header: () => null, animation: 'fade'}}
-                component={AppStack}
-              />
-            ) : (
-              <Stack.Screen
-                name="AuthStack"
-                component={AuthStack}
-                options={{
-                  header: () => null,
-                  animation: 'fade',
-                }}
-              />
-            )}
-          </Stack.Navigator>
-        </NavigationContainer>
-        <Toast config={toastConfig} />
-      </NativeBaseProvider>
+      <GestureHandlerRootView style={{flex: 1}}>
+        <NativeBaseProvider theme={appTheme}>
+          <NavigationContainer
+            ref={navigationRef}
+            onReady={() => {
+              routeNameRef.current =
+                navigationRef.current.getCurrentRoute().name;
+            }}
+            onStateChange={async () => {
+              const previousRouteName = routeNameRef.current;
+              const currentRouteName =
+                navigationRef.current.getCurrentRoute().name;
+              if (previousRouteName !== currentRouteName) {
+                await analytics().logScreenView({
+                  screen_name: currentRouteName,
+                  screen_class: currentRouteName,
+                });
+              }
+              console.log(previousRouteName, currentRouteName);
+              routeNameRef.current = currentRouteName;
+            }}>
+            <Stack.Navigator>
+              {user ? (
+                <Stack.Screen
+                  name="AppStack"
+                  options={{header: () => null, animation: 'fade'}}
+                  component={AppStack}
+                />
+              ) : (
+                <Stack.Screen
+                  name="AuthStack"
+                  component={AuthStack}
+                  options={{
+                    header: () => null,
+                    animation: 'fade',
+                  }}
+                />
+              )}
+            </Stack.Navigator>
+          </NavigationContainer>
+          <Toast config={toastConfig} />
+        </NativeBaseProvider>
+      </GestureHandlerRootView>
     </AppContext.Provider>
   );
 };
