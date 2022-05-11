@@ -30,7 +30,9 @@ import {GestureHandlerRootView} from 'react-native-gesture-handler';
 const App: () => Node = () => {
   const colorScheme = useColorScheme();
   const userStorage = useMMKV();
+  const savedStorage = useMMKV();
   const [userBank, setUserBank] = useMMKVObject('userBank', userStorage);
+  const [savedBank, setSavedBank] = useMMKVObject('savedBank', savedStorage);
   const [shouldUpdateUser, setShouldUpdateUser] = useState(false);
   const [user, setUser] = useState();
   const [initializing, setInitializing] = useState(true);
@@ -49,6 +51,8 @@ const App: () => Node = () => {
     userBank,
     currentLocation,
     setCurrentLocation,
+    savedBank,
+    setSavedBank,
   };
   // Functions
   const configureGoogleSignIn = () => {

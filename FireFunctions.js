@@ -38,11 +38,62 @@ export const getNextFeedDate = () => {
   }
 };
 
+export const getNextEventDateObj = card => {
+  if (card.type !== 'event') {
+    return 0;
+  } else {
+    let date = card.event.startTime.toDate();
+    let frequency = card.event.frequency;
+    if (frequency === 'once') {
+      return date;
+    } else if (frequency === 'weekly') {
+      let now = new Date();
+      console.log(card.docID, frequency, date > now);
+      if (date > now) {
+        return date;
+      } else {
+        // date already passed, get the next date
+        let newDate = date;
+        while (newDate < now) {
+          newDate.setDate(newDate.getDate() + 7);
+        }
+        return newDate;
+      }
+    } else if (frequency === 'biweekly') {
+      let now = new Date();
+      if (date > now) {
+        return date;
+      } else {
+        // date already passed, get the next date
+        let newDate = date;
+        while (newDate < now) {
+          newDate.setDate(newDate.getDate() + 14);
+        }
+        return newDate;
+      }
+    } else if (frequency) {
+      let now = new Date();
+      if (date > now) {
+        return date;
+      } else {
+        // date already passed, get the next date
+        let newDate = date;
+        while (newDate < now) {
+          newDate.setDate(newDate.getDate() + Number(frequency));
+        }
+        return newDate;
+      }
+    } else {
+      return date;
+    }
+  }
+};
+
 export const getNextEventDate = card => {
   if (card.type !== 'event') {
     return '';
   } else {
-    let date = card.event.startTime.toDate();
+    let date = new Date(card.event.startTime.seconds * 1000);
     let frequency = card.event.frequency;
     if (frequency === 'once') {
       const month = date.toLocaleString('default', {month: 'long'});
@@ -396,6 +447,25 @@ export const getCards = () => {
   });
 };
 
+export const getCardsByTag = tag => {
+  return new Promise((resolve, reject) => {
+    firestore()
+      .collection('cards')
+      .where('tags', 'array-contains', tag)
+      .get()
+      .then(querySnapshot => {
+        if (!querySnapshot.empty) {
+          resolve(
+            querySnapshot.docs.map(doc => ({docID: doc.id, ...doc.data()})),
+          );
+        } else {
+          resolve([]);
+        }
+      })
+      .catch(err => reject(err));
+  });
+};
+
 export const getCard = docID => {
   return new Promise((resolve, reject) => {
     firestore()
@@ -424,6 +494,18 @@ export const getAsset = (type, docID) => {
   return new Promise((resolve, reject) => {
     storage()
       .ref(`cards/${docID}/${type}`)
+      .getDownloadURL()
+      .then(url => resolve(url))
+      .catch(err => reject(err));
+  });
+};
+
+export const getTagPic = tag => {
+  return new Promise((resolve, reject) => {
+    const asset = tag.replace(/\s+/g, '');
+    console.log(asset);
+    storage()
+      .ref(`tags/${asset}.png`)
       .getDownloadURL()
       .then(url => resolve(url))
       .catch(err => reject(err));

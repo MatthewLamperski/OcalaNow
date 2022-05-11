@@ -37,7 +37,7 @@ const FeedItem = ({item, navigation}) => {
       case 'otg':
         return "Comin' out the Gate";
       case 'info':
-        return 'OcalaNow Feature';
+        return 'OcalaNow Featured';
     }
   };
   const date = () => {

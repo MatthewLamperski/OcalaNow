@@ -1,7 +1,6 @@
 import React from 'react';
 import {getFocusedRouteNameFromRoute} from '@react-navigation/native';
-import {Box, HStack, Text} from 'native-base';
-import TagLogoGold from '../../assets/svgs/TagLogoGold';
+import {HStack, Text} from 'native-base';
 
 const HeaderTitle = ({route, navigation}) => {
   const getHeaderTitle = () => {
@@ -9,12 +8,25 @@ const HeaderTitle = ({route, navigation}) => {
   };
   return (
     <HStack space={1} justifyContent="center" alignItems="center">
-      <Box h="100%" w="30">
-        <TagLogoGold height={25} width="100%" />
-      </Box>
-      <Text fontSize={16} fontWeight={300}>
-        {getHeaderTitle()}
-      </Text>
+      {getHeaderTitle() === 'Profile' ? (
+        <Text
+          italic
+          _light={{color: 'primary.500'}}
+          _dark={{color: 'primary.200'}}
+          fontWeight={300}
+          fontSize={18}>
+          Saved
+        </Text>
+      ) : (
+        <Text
+          italic
+          _light={{color: 'primary.500'}}
+          _dark={{color: 'primary.200'}}
+          fontWeight={300}
+          fontSize={18}>
+          {getHeaderTitle()}
+        </Text>
+      )}
     </HStack>
   );
 };

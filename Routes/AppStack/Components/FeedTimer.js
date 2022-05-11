@@ -30,9 +30,9 @@ const FeedTimer = () => {
   const feedTitle = () => {
     const feedTime = getNextFeedDate();
     if (feedTime.getDay() === 1) {
-      return 'Out of the Gate Title TBA';
+      return "'Comin' out the Gate'";
     } else {
-      return 'Saddle Up';
+      return "'Saddle Up'";
     }
   };
   useEffect(() => {

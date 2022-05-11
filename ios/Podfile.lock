@@ -818,6 +818,8 @@ PODS:
     - React
   - react-native-maps (0.30.1):
     - React-Core
+  - react-native-menu (0.5.2):
+    - React
   - react-native-mmkv (2.3.1):
     - MMKV (>= 1.2.13)
     - React-Core
@@ -1025,6 +1027,7 @@ DEPENDENCIES:
   - "react-native-geocoder (from `../node_modules/@timwangdev/react-native-geocoder`)"
   - "react-native-geolocation (from `../node_modules/@react-native-community/geolocation`)"
   - react-native-maps (from `../node_modules/react-native-maps`)
+  - "react-native-menu (from `../node_modules/@react-native-menu/menu`)"
   - react-native-mmkv (from `../node_modules/react-native-mmkv`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
@@ -1148,6 +1151,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-community/geolocation"
   react-native-maps:
     :path: "../node_modules/react-native-maps"
+  react-native-menu:
+    :path: "../node_modules/@react-native-menu/menu"
   react-native-mmkv:
     :path: "../node_modules/react-native-mmkv"
   react-native-safe-area-context:
@@ -1276,6 +1281,7 @@ SPEC CHECKSUMS:
   react-native-geocoder: 225895386f04bf37515eaa09c419dea9b923f40b
   react-native-geolocation: c956aeb136625c23e0dce0467664af2c437888c9
   react-native-maps: d752b0dd0e1951d815b1336332835aab6b4a836f
+  react-native-menu: 52089949cbe30b035c51e54f92a7d99136c2fed4
   react-native-mmkv: 83eca4662722da83bf5eb7155f9cb3a28213a7d2
   react-native-safe-area-context: f98b0b16d1546d208fc293b4661e3f81a895afd9
   React-perflogger: 30ab8d6db10e175626069e742eead3ebe8f24fd5

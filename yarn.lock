@@ -1809,6 +1809,11 @@
   resolved "https://registry.yarnpkg.com/@react-native-google-signin/google-signin/-/google-signin-7.2.2.tgz#29e416d5c8484b52de3dc97f982f04b0083f27fe"
   integrity sha512-FqSJAEYz+SNeIOyokFX3e7nbBgK0js/Hye0YNY+cV0Qf1NxKw1vRt2MQB3kfuVWFCb+OSovgQCl6W8dhYvsblw==
 
+"@react-native-menu/menu@^0.5.2":
+  version "0.5.2"
+  resolved "https://registry.yarnpkg.com/@react-native-menu/menu/-/menu-0.5.2.tgz#7b1ae8e41ee3b7306c4bf8b53b9e2cb78b4a829b"
+  integrity sha512-+ULWH3OXuirS4m03UhUkQj/G9q0wQo7LGDcxTyS12bVKQQ+yHwif4C3QcYy0zVIxwMPltCA7eOvsTThT0+B2xQ==
+
 "@react-native/assets@1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@react-native/assets/-/assets-1.0.0.tgz#c6f9bf63d274bafc8e970628de24986b30a55c8e"
@@ -7018,6 +7023,13 @@ react-native-snap-carousel@^3.9.1:
   dependencies:
     prop-types "^15.6.1"
     react-addons-shallow-compare "15.6.2"
+
+react-native-super-grid@^4.4.0:
+  version "4.4.0"
+  resolved "https://registry.yarnpkg.com/react-native-super-grid/-/react-native-super-grid-4.4.0.tgz#4566a288563d035548bcf68354c0c262bc69489e"
+  integrity sha512-0msesnKyrOuT0xtlmFzQMgbRLBKnQel/AgJWWh/4UZAnRtLgQufzuVvnuQnyFQQb0ioQa3GkfMwr2ayFn5BHoA==
+  dependencies:
+    prop-types "^15.6.0"
 
 react-native-svg@^12.3.0:
   version "12.3.0"

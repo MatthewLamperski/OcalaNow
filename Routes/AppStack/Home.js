@@ -12,8 +12,15 @@ import Geolocation from '@react-native-community/geolocation';
 import analytics from '@react-native-firebase/analytics';
 
 const Home = ({navigation}) => {
-  const {user, setUser, setNotification, currentLocation, setCurrentLocation} =
-    useContext(AppContext);
+  const {
+    user,
+    setUser,
+    setNotification,
+    currentLocation,
+    setCurrentLocation,
+    setSavedBank,
+    savedBank,
+  } = useContext(AppContext);
   const theme = useTheme();
   const [cards, setCards] = useState();
   const swiperRef = useRef(null);
@@ -94,6 +101,18 @@ const Home = ({navigation}) => {
     getCards()
       .then(res => {
         setCards(res.filter(filterFunction).sort(sortCardsByMatch));
+        const userSaved = res.filter(card => {
+          if (!user.saved) {
+            // User has not saved any
+            return false;
+          } else {
+            return user.saved.includes(card.docID);
+          }
+        });
+        setSavedBank({
+          ...savedBank,
+          [user.uid]: userSaved,
+        });
       })
       .catch(err => console.log(err));
   };
@@ -169,7 +188,15 @@ const Home = ({navigation}) => {
   const handleSave = card => {
     setActionsDisabled(true);
     ReactNativeHapticFeedback.trigger('notificationSuccess');
-    setSaved(prevState => [...prevState, card.docID]);
+    if (!saved.includes(card.docID)) {
+      setSaved(prevState => [...prevState, card.docID]);
+      setSavedBank({
+        ...savedBank,
+        [user.uid]: savedBank[user.uid]
+          ? [...savedBank[user.uid], card]
+          : [card],
+      });
+    }
     analytics()
       .logEvent('card_swipe_right', {
         type: card.type,
@@ -182,7 +209,9 @@ const Home = ({navigation}) => {
   const handleRecycle = card => {
     setActionsDisabled(true);
     ReactNativeHapticFeedback.trigger('soft');
-    setRecycled(prevState => [...prevState, card.docID]);
+    if (recycled.includes(card.docID)) {
+      setRecycled(prevState => [...prevState, card.docID]);
+    }
     analytics()
       .logEvent('card_swipe_left', {
         type: card.type,
