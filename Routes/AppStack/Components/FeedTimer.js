@@ -56,7 +56,8 @@ const FeedTimer = () => {
         colors.primary['400'],
         colors.primary['500'],
       ]}
-      useAngle={75}
+      useAngle
+      angle={75}
       style={{
         width: '100%',
         padding: 7,

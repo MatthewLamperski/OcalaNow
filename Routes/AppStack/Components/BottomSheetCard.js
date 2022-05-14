@@ -448,7 +448,8 @@ const BottomSheetCard = ({card, navigation, currentLocation}) => {
             alignItems="center">
             <LinearGradient
               colors={[colors.primary['500'], colors.primary['400']]}
-              useAngle={45}
+              useAngle
+              angle={45}
               style={{
                 justifyContent: 'center',
                 alignItems: 'center',
@@ -473,7 +474,8 @@ const BottomSheetCard = ({card, navigation, currentLocation}) => {
             alignItems="center">
             <LinearGradient
               colors={[colors.primary['500'], colors.primary['400']]}
-              useAngle={45}
+              useAngle
+              angle={45}
               style={{
                 justifyContent: 'center',
                 alignItems: 'center',

@@ -13,6 +13,8 @@ import {
   AppState,
   Linking,
   LogBox,
+  PermissionsAndroid,
+  Platform,
   StyleSheet,
   useColorScheme,
 } from 'react-native';
@@ -76,7 +78,13 @@ const App: () => Node = () => {
       title = 'Location not found',
       message = 'OcalaNow works much better with your location. Tap to learn more',
     ) => {
-      Geolocation.requestAuthorization();
+      if (Platform.OS === 'ios') {
+        Geolocation.requestAuthorization();
+      } else if (Platform.OS === 'android') {
+        PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        );
+      }
       Geolocation.getCurrentPosition(
         position => {
           setCurrentLocation({
@@ -121,7 +129,13 @@ const App: () => Node = () => {
     title = 'Location not found',
     message = 'OcalaNow works much better with your location. Tap to learn more',
   ) => {
-    Geolocation.requestAuthorization();
+    if (Platform.OS === 'ios') {
+      Geolocation.requestAuthorization();
+    } else if (Platform.OS === 'android') {
+      PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+      );
+    }
     Geolocation.getCurrentPosition(
       position => {
         setCurrentLocation({

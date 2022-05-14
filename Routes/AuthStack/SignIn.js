@@ -133,7 +133,7 @@ const SignIn = ({navigation}) => {
   return (
     <LinearGradient
       colors={[theme.colors.primary['300'], theme.colors.primary['500']]}
-      useAngle={true}
+      useAngle
       angle={75}
       angleCenter={{x: 0.5, y: 0.5}}
       style={{flex: 1}}>

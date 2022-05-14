@@ -315,6 +315,9 @@ const CardDetailView = ({route, navigation}) => {
           </View>
           <VStack w="100%" space={1} px={3} py={2}>
             <Pressable
+              bg="red.500"
+              position="relative"
+              overflow="hidden"
               onPress={() => {
                 Alert.alert(
                   'Get Directions',
@@ -349,8 +352,11 @@ const CardDetailView = ({route, navigation}) => {
                 showsUserLocation
                 ref={mapRef}
                 style={{
-                  borderRadius: 20,
-                  flex: 1,
+                  position: 'absolute',
+                  top: 0,
+                  bottom: 0,
+                  right: 0,
+                  left: 0,
                 }}
                 initialRegion={{
                   latitude: lat(),
@@ -386,62 +392,63 @@ const CardDetailView = ({route, navigation}) => {
                   </View>
                 </Marker>
               </MapView>
-              <HStack
-                mt={2}
-                space={2}
-                justifyContent="flex-start"
-                alignItems="baseline">
-                {card.type === 'event' && (
-                  <HStack
-                    justifyContent="flex-start"
-                    alignItems="baseline"
-                    space={2}>
-                    <FontAwesome5
-                      name="calendar-alt"
-                      size={16}
-                      color={colorScheme === 'dark' ? 'white' : 'black'}
-                    />
-                    <Text shadow={3} fontWeight={300}>
-                      {getNextEventDate(card)}
-                    </Text>
-                  </HStack>
-                )}
-                {currentLocation && (
-                  <>
-                    <FontAwesome5
-                      name={getDistanceBetween() > 1.5 ? 'car' : 'walking'}
-                      size={16}
-                      color={
-                        colorScheme === 'dark'
-                          ? theme.colors.muted['400']
-                          : theme.colors.muted['500']
-                      }
-                    />
-                    <Text shadow={3} fontWeight={300}>
-                      {getDistanceBetween()} mi
-                    </Text>
-                  </>
-                )}
+            </Pressable>
+            <HStack
+              flex={1}
+              mt={2}
+              space={2}
+              justifyContent="flex-start"
+              alignItems="baseline">
+              {card.type === 'event' && (
                 <HStack
                   justifyContent="flex-start"
                   alignItems="baseline"
-                  flex={1}
                   space={2}>
                   <FontAwesome5
-                    name="map-marker-alt"
+                    name="calendar-alt"
+                    size={16}
+                    color={colorScheme === 'dark' ? 'white' : 'black'}
+                  />
+                  <Text shadow={3} fontWeight={300}>
+                    {getNextEventDate(card)}
+                  </Text>
+                </HStack>
+              )}
+              {currentLocation && (
+                <>
+                  <FontAwesome5
+                    name={getDistanceBetween() > 1.5 ? 'car' : 'walking'}
+                    size={16}
                     color={
                       colorScheme === 'dark'
                         ? theme.colors.muted['400']
                         : theme.colors.muted['500']
                     }
-                    size={16}
                   />
-                  <Text flex={1} numberOfLines={1} fontWeight={200}>
-                    {mapSubtitle()}
+                  <Text shadow={3} fontWeight={300}>
+                    {getDistanceBetween()} mi
                   </Text>
-                </HStack>
+                </>
+              )}
+              <HStack
+                justifyContent="flex-start"
+                alignItems="baseline"
+                overflow="hidden"
+                space={2}>
+                <FontAwesome5
+                  name="map-marker-alt"
+                  color={
+                    colorScheme === 'dark'
+                      ? theme.colors.muted['400']
+                      : theme.colors.muted['500']
+                  }
+                  size={16}
+                />
+                <Text numberOfLines={1} fontWeight={200}>
+                  {mapSubtitle()}
+                </Text>
               </HStack>
-            </Pressable>
+            </HStack>
             <ScrollView horizontal>
               <HStack
                 p={2}
@@ -460,7 +467,8 @@ const CardDetailView = ({route, navigation}) => {
                       theme.colors.primary['500'],
                       theme.colors.primary['400'],
                     ]}
-                    useAngle={45}
+                    useAngle
+                    angle={75}
                     style={{
                       justifyContent: 'center',
                       alignItems: 'center',
@@ -487,7 +495,8 @@ const CardDetailView = ({route, navigation}) => {
                       theme.colors.primary['500'],
                       theme.colors.primary['400'],
                     ]}
-                    useAngle={45}
+                    useAngle
+                    angle={45}
                     style={{
                       justifyContent: 'center',
                       alignItems: 'center',
@@ -569,7 +578,6 @@ const CardDetailView = ({route, navigation}) => {
                     m={0.5}
                     p={1}
                     px={3}
-                    shadow={1}
                     bg="primary.500"
                     borderRadius={10}>
                     <FontAwesome5 name="tags" color="white" size={12} />

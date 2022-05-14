@@ -215,6 +215,7 @@ const Card = ({card, currentLocation, navigation}) => {
             style={{height: 75}}
             shadow={3}
             borderRadius={20}
+            overflow="hidden"
             my={2}>
             <MapView
               pitchEnabled={false}
