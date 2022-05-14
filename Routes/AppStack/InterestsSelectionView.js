@@ -6,6 +6,7 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {Button, useTheme, View} from 'native-base';
 import {useColorScheme} from 'react-native';
 import TagPreview from './Components/TagPreview';
+import messaging from '@react-native-firebase/messaging';
 
 const InterestsSelectionView = ({navigation}) => {
   const {bottom} = useSafeAreaInsets();
@@ -78,6 +79,11 @@ const InterestsSelectionView = ({navigation}) => {
           <Button
             w="100%"
             onButtonPress={() => {
+              selected.forEach(interest => {
+                messaging()
+                  .subscribeToTopic(interest.replace(/\s/, ''))
+                  .then(res => console.log('subscribed to:', interest, res));
+              });
               setUser(prevState => ({
                 ...prevState,
                 interests: selected,

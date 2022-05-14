@@ -1,10 +1,7 @@
 import React, {useContext, useEffect, useRef, useState} from 'react';
 import {FlatList, HStack, Spinner, Text, useTheme, View} from 'native-base';
 import {AppContext} from '../../AppContext';
-import {MenuView} from '@react-native-menu/menu';
-import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import CardPreviewTile from './Components/CardPreviewTile';
-import {getDistance} from 'geolib';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 const Profile = ({navigation}) => {
@@ -13,41 +10,50 @@ const Profile = ({navigation}) => {
   const {user, savedBank, setSavedBank, currentLocation} =
     useContext(AppContext);
   const [sort, setSort] = useState();
-  const [cards, setCards] = useState(
-    savedBank[user.uid] ? savedBank[user.uid] : null,
-  );
+  const [cards, setCards] = useState();
+  useEffect(() => {
+    if (savedBank && savedBank[user.uid]) {
+      if (cards) {
+        if (savedBank[user.uid].length !== cards.length) {
+          setCards(savedBank[user.uid].reverse());
+        }
+      } else {
+        setCards(savedBank[user.uid].reverse());
+      }
+    }
+  }, [savedBank]);
   const flatListRef = useRef(null);
   const onSortPress = ({nativeEvent: {event}}) => {
     setSort(event);
   };
-  useEffect(() => {
-    if (cards && sort) {
-      if (sort === 'closest') {
-        setCards(prevState => [
-          ...prevState.sort((a, b) => {
-            const distA = Number(
-              getDistance(
-                {lat: lat(a), lng: lng(a)},
-                {lat: currentLocation.lat, lng: currentLocation.lng},
-              ),
-            );
-            const distB = Number(
-              getDistance(
-                {lat: lat(b), lng: lng(b)},
-                {
-                  lat: currentLocation.lat,
-                  lng: currentLocation.lng,
-                },
-              ),
-            );
-            return distA > distB;
-          }),
-        ]);
-      } else if (sort === 'match') {
-        setCards(prevState => [...prevState.sort(sortCardsByMatch)]);
-      }
-    }
-  }, [sort]);
+  // useEffect(() => {
+  //   if (cards && sort) {
+  //     if (sort === 'closest') {
+  //       setCards(prevState => [
+  //         ...prevState.sort((a, b) => {
+  //           const distA = Number(
+  //             getDistance(
+  //               {lat: lat(a), lng: lng(a)},
+  //               {lat: currentLocation.lat, lng: currentLocation.lng},
+  //             ),
+  //           );
+  //           const distB = Number(
+  //             getDistance(
+  //               {lat: lat(b), lng: lng(b)},
+  //               {
+  //                 lat: currentLocation.lat,
+  //                 lng: currentLocation.lng,
+  //               },
+  //             ),
+  //           );
+  //           return distA > distB;
+  //         }),
+  //       ]);
+  //     } else if (sort === 'match') {
+  //       setCards(prevState => [...prevState.sort(sortCardsByMatch)]);
+  //     }
+  //   }
+  // }, [sort]);
   const actions = [
     ...(currentLocation
       ? [
@@ -114,30 +120,15 @@ const Profile = ({navigation}) => {
       <FlatList
         ListHeaderComponent={
           cards ? (
-            <HStack
-              px={4}
-              pt={2}
-              justifyContent="space-between"
-              alignItems="center">
+            <HStack px={4} pt={2} justifyContent="flex-end" alignItems="center">
               <Text
                 fontWeight={300}
                 italic
                 _dark={{color: 'primary.200'}}
                 _light={{color: 'primary.500'}}>
-                {cards.length} Saved
+                {savedBank[user.uid] ? savedBank[user.uid].length : 'None'}{' '}
+                Saved
               </Text>
-              <MenuView
-                title="Sort By"
-                onPressAction={onSortPress}
-                actions={actions}>
-                <View p={2}>
-                  <FontAwesome5
-                    name="sort"
-                    color={colors.primary['500']}
-                    size={20}
-                  />
-                </View>
-              </MenuView>
             </HStack>
           ) : null
         }
@@ -159,9 +150,10 @@ const Profile = ({navigation}) => {
             }}
             card={item}
             navigation={navigation}
+            unsave
           />
         )}
-        keyExtractor={(item, index) => index}
+        keyExtractor={(item, index) => item.docID}
         ListEmptyComponent={
           cards ? (
             <Text>Nothing to see here!</Text>

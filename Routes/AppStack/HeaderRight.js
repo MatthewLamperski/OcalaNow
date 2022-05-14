@@ -1,9 +1,10 @@
 import React from 'react';
 import {getFocusedRouteNameFromRoute} from '@react-navigation/native';
 import {Pressable, useTheme} from 'native-base';
-import {useColorScheme} from 'react-native';
+import {Alert, useColorScheme} from 'react-native';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import {signOut} from '../../FireFunctions';
 
 const HeaderRight = ({route, navigation}) => {
   const getHeaderTitle = () => {
@@ -18,10 +19,26 @@ const HeaderRight = ({route, navigation}) => {
           p={2}
           onPress={() => {
             ReactNativeHapticFeedback.trigger('soft');
-            navigation.navigate('SettingsView');
+            Alert.alert(
+              'Sign Out',
+              'Are you sure you want to sign out of OcalaNow? You will have to sign back in to use OcalaNow again.',
+              [
+                {
+                  text: 'Cancel',
+                  style: 'cancel',
+                },
+                {
+                  text: 'Sign Out',
+                  style: 'destructive',
+                  onPress: () => {
+                    signOut();
+                  },
+                },
+              ],
+            );
           }}>
           <FontAwesome5
-            name="cog"
+            name="sign-out-alt"
             color={colors.primary[colorScheme === 'dark' ? '200' : '500']}
             size={18}
           />

@@ -5,21 +5,21 @@ import Card from './Components/Card';
 import SwipeCards from 'react-native-swipe-cards-deck';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
-import {Alert, Linking, Platform, StyleSheet} from 'react-native';
+import {AppState, Platform, StyleSheet} from 'react-native';
 import NoMoreCards from './Components/NoMoreCards';
-import {getCards} from '../../FireFunctions';
-import Geolocation from '@react-native-community/geolocation';
+import {getCards, shareCardLink} from '../../FireFunctions';
 import analytics from '@react-native-firebase/analytics';
 
-const Home = ({navigation}) => {
+const Home = ({navigation, route}) => {
   const {
     user,
     setUser,
-    setNotification,
+    setError,
     currentLocation,
     setCurrentLocation,
     setSavedBank,
     savedBank,
+    getUserLocation,
   } = useContext(AppContext);
   const theme = useTheme();
   const [cards, setCards] = useState();
@@ -28,6 +28,9 @@ const Home = ({navigation}) => {
   const [recycled, setRecycled] = useState(user.recycled ? user.recycled : []);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [actionsDisabled, setActionsDisabled] = useState(false);
+  const [showButtons, setShowButtons] = useState(true);
+  const [shareLoading, setShareLoading] = useState(false);
+
   useEffect(() => {
     if (actionsDisabled) {
       setTimeout(() => {
@@ -39,42 +42,7 @@ const Home = ({navigation}) => {
     refreshCards(filterCards);
   }, []);
   useEffect(() => {
-    Geolocation.requestAuthorization();
-    Geolocation.getCurrentPosition(
-      position => {
-        setCurrentLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        });
-      },
-      error => {
-        if (error.PERMISSION_DENIED) {
-          setNotification({
-            title: 'Location not found',
-            message:
-              'OcalaNow works much better with your location. Tap to learn more',
-            onPress: () => {
-              Alert.alert(
-                'Enable Location Services',
-                "OcalaNow uses your location to enhance your experience. We can help you plan your find your way around Ocala! \nTo enable location services, go to settings, and set location services to 'While using the app'.",
-                [
-                  {
-                    text: "Don't Show Again",
-                    onPress: dontShowLocationRequest,
-                    style: 'destructive',
-                  },
-                  {
-                    text: 'Open Settings',
-                    onPress: enableLocationServices,
-                    style: 'cancel',
-                  },
-                ],
-              );
-            },
-          });
-        }
-      },
-    );
+    getUserLocation();
   }, []);
   useEffect(() => {
     setUser({
@@ -88,19 +56,50 @@ const Home = ({navigation}) => {
       saved: saved,
     });
   }, [saved]);
-  const dontShowLocationRequest = () => {
-    console.log("Don't show again");
-  };
-  const enableLocationServices = () => {
-    Linking.openSettings();
-  };
+  const appState = useRef(AppState.currentState);
+  const [refreshOnActive, setCheckLocation] = useState(false);
+  useEffect(() => {
+    const appStateSubscription = AppState.addEventListener(
+      'change',
+      nextAppState => {
+        if (appState.current.match(/background/) && nextAppState === 'active') {
+          console.log('Should be');
+          setCheckLocation(true);
+          setTimeout(() => {
+            setCheckLocation(false);
+          }, 1000);
+        }
+        appState.current = nextAppState;
+      },
+    );
+    return () => {
+      appStateSubscription.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (recycled.length === 0 && refreshOnActive) {
+      console.log('refreshing');
+      setSaved(user.saved ? user.saved : []);
+      setRecycled(user.recycled ? user.recycled : []);
+      refreshCards(filterCards);
+    } else {
+      console.log(recycled);
+    }
+  }, [refreshOnActive]);
 
   // Card Maintainence
 
   const refreshCards = filterFunction => {
+    setCards();
     getCards()
       .then(res => {
-        setCards(res.filter(filterFunction).sort(sortCardsByMatch));
+        const displayCards = res.filter(filterFunction).sort(sortCardsByMatch);
+        setCards(displayCards);
+        if (displayCards.length > 0) {
+          setShowButtons(true);
+          setCurrentIdx(0);
+        }
         const userSaved = res.filter(card => {
           if (!user.saved) {
             // User has not saved any
@@ -185,17 +184,34 @@ const Home = ({navigation}) => {
     return overallMatch1 < overallMatch2;
   };
 
-  const handleSave = card => {
+  const saveCard = async card => {
     setActionsDisabled(true);
     ReactNativeHapticFeedback.trigger('notificationSuccess');
-    if (!saved.includes(card.docID)) {
-      setSaved(prevState => [...prevState, card.docID]);
-      setSavedBank({
-        ...savedBank,
-        [user.uid]: savedBank[user.uid]
-          ? [...savedBank[user.uid], card]
-          : [card],
-      });
+    if (card.docID) {
+      if (!saved.includes(card.docID)) {
+        setSaved(prevState => [...prevState, card.docID]);
+        if (savedBank && savedBank[user.uid]) {
+          if (
+            !savedBank[user.uid]
+              .map(savedCard => savedCard.docID)
+              .includes(card.docID)
+          ) {
+            setSavedBank({
+              ...savedBank,
+              [user.uid]: savedBank[user.uid]
+                ? [...savedBank[user.uid], card]
+                : [card],
+            });
+          }
+        } else {
+          setSavedBank({
+            ...savedBank,
+            [user.uid]: savedBank[user.uid]
+              ? [...savedBank[user.uid], card]
+              : [card],
+          });
+        }
+      }
     }
     analytics()
       .logEvent('card_swipe_right', {
@@ -204,13 +220,19 @@ const Home = ({navigation}) => {
         uid: user.uid,
       })
       .then(() => console.log('card_swipe_right logged'));
+  };
+
+  const handleSave = card => {
+    saveCard(card);
     return true;
   };
   const handleRecycle = card => {
     setActionsDisabled(true);
     ReactNativeHapticFeedback.trigger('soft');
-    if (recycled.includes(card.docID)) {
-      setRecycled(prevState => [...prevState, card.docID]);
+    if (card && card.docID) {
+      if (!recycled.includes(card.docID)) {
+        setRecycled(prevState => [...prevState, card.docID]);
+      }
     }
     analytics()
       .logEvent('card_swipe_left', {
@@ -236,6 +258,7 @@ const Home = ({navigation}) => {
         <Spinner my="auto" mx="auto" color="primary.500" />
       ) : (
         <SwipeCards
+          smoothTransition={true}
           ref={swiperRef}
           style={{alignItems: 'stretch', flexGrow: 1, paddingTop: 20}}
           cards={cards}
@@ -253,13 +276,18 @@ const Home = ({navigation}) => {
             yup: {onAction: handleSave, show: false},
           }}
           renderNoMoreCards={() => (
-            <NoMoreCards handleUnrecycle={handleUnrecycle} />
+            <NoMoreCards
+              setCurrentIdx={setCurrentIdx}
+              setShowButtons={setShowButtons}
+              handleUnrecycle={handleUnrecycle}
+              recycled={recycled}
+            />
           )}
           showYup={false}
           showNope={false}
         />
       )}
-      {cards && cards.length !== 0 && (
+      {cards && cards.length !== 0 && showButtons && (
         <HStack
           space={9}
           alignItems="center"
@@ -268,11 +296,13 @@ const Home = ({navigation}) => {
           w="100%">
           <Button
             isDisabled={actionsDisabled}
+            borderWidth={2}
+            borderColor="error.500"
             p={0}
             m={0}
             style={styles.actionButton}
-            _light={{bg: 'muted.100', shadow: 2, _pressed: {bg: 'muted.200'}}}
-            _dark={{bg: 'muted.700', shadow: 3, _pressed: {bg: 'muted.800'}}}
+            _light={{bg: 'muted.100', _pressed: {bg: 'muted.200'}}}
+            _dark={{bg: 'muted.800', _pressed: {bg: 'muted.800'}}}
             onPress={() => {
               ReactNativeHapticFeedback.trigger('soft');
               swiperRef.current.swipeNope();
@@ -288,9 +318,11 @@ const Home = ({navigation}) => {
           <Button
             p={0}
             m={0}
+            borderWidth={2}
+            borderColor="primary.500"
             style={styles.actionButton}
-            _light={{bg: 'muted.100', shadow: 2, _pressed: {bg: 'muted.200'}}}
-            _dark={{bg: 'muted.700', shadow: 3, _pressed: {bg: 'muted.800'}}}
+            _light={{bg: 'muted.100', _pressed: {bg: 'muted.200'}}}
+            _dark={{bg: 'muted.800', _pressed: {bg: 'muted.800'}}}
             onPress={() => {
               ReactNativeHapticFeedback.trigger(
                 Platform.select({ios: 'impactHeavy', android: 'impactMedium'}),
@@ -306,12 +338,49 @@ const Home = ({navigation}) => {
             />
           </Button>
           <Button
+            isLoading={shareLoading}
+            p={0}
+            m={0}
+            borderWidth={2}
+            borderColor="primary.500"
+            style={styles.actionButton}
+            _light={{bg: 'muted.100', _pressed: {bg: 'muted.200'}}}
+            _dark={{bg: 'muted.800', _pressed: {bg: 'muted.800'}}}
+            onPress={() => {
+              ReactNativeHapticFeedback.trigger(
+                Platform.select({ios: 'impactHeavy', android: 'impactMedium'}),
+              );
+              setShareLoading(true);
+              shareCardLink(cards[currentIdx], user.uid)
+                .then(() => setShareLoading(false))
+                .catch(err => {
+                  setShareLoading(false);
+                  if (!(JSON.stringify(err) === '{}')) {
+                    setError({
+                      title: 'Something went wrong...',
+                      message:
+                        "We couldn't generate a link for that card. Try again later.",
+                    });
+                  }
+                });
+            }}>
+            <FontAwesome5
+              solid
+              name="share-square"
+              color={theme.colors.primary['500']}
+              size={20}
+            />
+          </Button>
+          <Button
+            borderWidth={2}
+            borderColor="success.500"
+            shadow={1}
             p={0}
             m={0}
             isDisabled={actionsDisabled}
             style={styles.actionButton}
-            _light={{bg: 'muted.100', shadow: 2, _pressed: {bg: 'muted.200'}}}
-            _dark={{bg: 'muted.700', shadow: 3, _pressed: {bg: 'muted.800'}}}
+            _light={{bg: 'muted.100', _pressed: {bg: 'muted.200'}}}
+            _dark={{bg: 'muted.800', _pressed: {bg: 'muted.800'}}}
             onPress={() => {
               ReactNativeHapticFeedback.trigger('notificationSuccess');
               swiperRef.current.swipeYup();
@@ -319,7 +388,7 @@ const Home = ({navigation}) => {
             }}>
             <FontAwesome5
               name="check"
-              color={theme.colors.green['500']}
+              color={theme.colors.success['500']}
               size={30}
             />
           </Button>

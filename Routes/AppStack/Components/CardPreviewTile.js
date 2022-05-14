@@ -11,13 +11,24 @@ import {
 } from 'native-base';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import {Animated, Image, useColorScheme} from 'react-native';
-import {getAsset, getNextEventDate} from '../../../FireFunctions';
+import {
+  getAsset,
+  getNextEventDate,
+  shareCardLink,
+} from '../../../FireFunctions';
 import {getDistance} from 'geolib';
 import {AppContext} from '../../../AppContext';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
-const CardPreviewTile = ({card, navigation, currentTag, scrollToTop}) => {
-  const {currentLocation} = useContext(AppContext);
+const CardPreviewTile = ({
+  card,
+  navigation,
+  currentTag,
+  scrollToTop,
+  unsave,
+}) => {
+  const {currentLocation, savedBank, setSavedBank, user, setUser, setError} =
+    useContext(AppContext);
   const colorScheme = useColorScheme();
   const {colors} = useTheme();
   const [logo, setLogo] = useState();
@@ -114,6 +125,7 @@ const CardPreviewTile = ({card, navigation, currentTag, scrollToTop}) => {
           }}>
           <View borderRadius={15} flex={1} w="100%">
             <View
+              position="relative"
               justifyContent="center"
               alignItems="center"
               shadow={1}
@@ -143,6 +155,77 @@ const CardPreviewTile = ({card, navigation, currentTag, scrollToTop}) => {
                   }}
                 />
               </Animated.View>
+              <HStack
+                space={2}
+                justifyContent="center"
+                alignItems="center"
+                p={2}
+                position="absolute"
+                top={0}
+                right={0}>
+                <Pressable
+                  bg="primary.500"
+                  aspectRatio={1}
+                  borderRadius={50}
+                  justifyContent="center"
+                  alignItems="center"
+                  p={2}
+                  onPress={() => {
+                    ReactNativeHapticFeedback.trigger('soft');
+                    shareCardLink(card, user.uid).catch(err => {
+                      if (!(JSON.stringify(err) === '{}')) {
+                        setError({
+                          title: 'Something went wrong...',
+                          message:
+                            "We couldn't generate a link for that card. Try again later.",
+                        });
+                      }
+                    });
+                  }}>
+                  <FontAwesome5 name="share-square" color="white" size={16} />
+                </Pressable>
+                {unsave && (
+                  <Pressable
+                    bg="error.500"
+                    borderRadius={50}
+                    justifyContent="center"
+                    alignItems="center"
+                    p={2}
+                    onPress={() => {
+                      ReactNativeHapticFeedback.trigger('soft');
+                      setUser(prevState => ({
+                        ...prevState,
+                        saved: [
+                          ...prevState.saved.slice(
+                            0,
+                            prevState.saved.indexOf(card.docID),
+                          ),
+                          ...prevState.saved.slice(
+                            prevState.saved.indexOf(card.docID) + 1,
+                          ),
+                        ],
+                      }));
+                      setSavedBank({
+                        ...savedBank,
+                        [user.uid]: [
+                          ...savedBank[user.uid].slice(
+                            0,
+                            savedBank[user.uid]
+                              .map(savedCard => savedCard.docID)
+                              .indexOf(card.docID),
+                          ),
+                          ...savedBank[user.uid].slice(
+                            savedBank[user.uid]
+                              .map(savedCard => savedCard.docID)
+                              .indexOf(card.docID) + 1,
+                          ),
+                        ],
+                      });
+                    }}>
+                    <FontAwesome5 name="trash-alt" color="white" size={16} />
+                  </Pressable>
+                )}
+              </HStack>
             </View>
             <HStack
               py={2}

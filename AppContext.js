@@ -13,4 +13,7 @@ export const AppContext = React.createContext({
   setCurrentLocation: () => {},
   savedBank: undefined,
   setSavedBank: () => {},
+  prefBank: undefined,
+  setPrefBank: () => {},
+  getUserLocation: () => {},
 });

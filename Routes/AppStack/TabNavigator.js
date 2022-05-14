@@ -54,7 +54,7 @@ const screenOptions = ({route, colorScheme, theme}) => ({
     } else if (route.name === 'Feed') {
       iconName = focused ? 'newspaper' : 'newspaper-outline';
     } else if (route.name === 'Profile') {
-      iconName = focused ? 'person' : 'person-outline';
+      iconName = focused ? 'bookmark' : 'bookmark-outline';
     }
     return (
       <Ionicons

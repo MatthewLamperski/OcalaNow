@@ -8,7 +8,14 @@
 
 import type {Node} from 'react';
 import React, {useEffect, useRef, useState} from 'react';
-import {LogBox, StyleSheet, useColorScheme} from 'react-native';
+import {
+  Alert,
+  AppState,
+  Linking,
+  LogBox,
+  StyleSheet,
+  useColorScheme,
+} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import {NativeBaseProvider} from 'native-base/src/core/NativeBaseProvider';
 import {appTheme} from './Theme';
@@ -22,17 +29,27 @@ import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import Toast from 'react-native-toast-message';
 import {toastConfig} from './ToastConfig';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
-import {getUser, updateUser} from './FireFunctions';
+import {
+  getUser,
+  requestUserNotificationPermission,
+  updateMessagingToken,
+  updateUser,
+} from './FireFunctions';
 import AppStack from './Routes/AppStack/AppStack';
 import analytics from '@react-native-firebase/analytics';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import Geolocation from '@react-native-community/geolocation';
+import {utils} from '@react-native-firebase/app';
+import dynamicLinks from '@react-native-firebase/dynamic-links';
 
 const App: () => Node = () => {
   const colorScheme = useColorScheme();
   const userStorage = useMMKV();
   const savedStorage = useMMKV();
+  const prefStorage = useMMKV();
   const [userBank, setUserBank] = useMMKVObject('userBank', userStorage);
   const [savedBank, setSavedBank] = useMMKVObject('savedBank', savedStorage);
+  const [prefBank, setPrefBank] = useMMKVObject('prefBank', prefStorage);
   const [shouldUpdateUser, setShouldUpdateUser] = useState(false);
   const [user, setUser] = useState();
   const [initializing, setInitializing] = useState(true);
@@ -53,8 +70,130 @@ const App: () => Node = () => {
     setCurrentLocation,
     savedBank,
     setSavedBank,
+    prefBank,
+    setPrefBank,
+    getUserLocation: (
+      title = 'Location not found',
+      message = 'OcalaNow works much better with your location. Tap to learn more',
+    ) => {
+      Geolocation.requestAuthorization();
+      Geolocation.getCurrentPosition(
+        position => {
+          setCurrentLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+        },
+        err => {
+          if (err.PERMISSION_DENIED) {
+            if (prefBank && prefBank[user.uid]) {
+            } else {
+              setNotification({
+                title,
+                message,
+                onPress: () => {
+                  Alert.alert(
+                    'Enable Location Services',
+                    "OcalaNow uses your location to enhance your experience. We can help you plan your find your way around Ocala! \nTo enable location services, go to settings, and set location services to 'While using the app'.",
+                    [
+                      {
+                        text: "Don't Show Again",
+                        onPress: dontShowLocationRequest,
+                        style: 'destructive',
+                      },
+                      {
+                        text: 'Open Settings',
+                        onPress: enableLocationServices,
+                        style: 'cancel',
+                      },
+                    ],
+                  );
+                },
+              });
+            }
+          }
+        },
+      );
+    },
   };
   // Functions
+  const refreshUserLocation = (
+    title = 'Location not found',
+    message = 'OcalaNow works much better with your location. Tap to learn more',
+  ) => {
+    Geolocation.requestAuthorization();
+    Geolocation.getCurrentPosition(
+      position => {
+        setCurrentLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+      },
+      err => {
+        if (err.PERMISSION_DENIED) {
+          if (prefBank && prefBank[user.uid]) {
+          } else {
+            setNotification({
+              title,
+              message,
+              onPress: () => {
+                Alert.alert(
+                  'Enable Location Services',
+                  "OcalaNow uses your location to enhance your experience. We can help you plan your find your way around Ocala! \nTo enable location services, go to settings, and set location services to 'While using the app'.",
+                  [
+                    {
+                      text: "Don't Show Again",
+                      onPress: dontShowLocationRequest,
+                      style: 'destructive',
+                    },
+                    {
+                      text: 'Open Settings',
+                      onPress: enableLocationServices,
+                      style: 'cancel',
+                    },
+                  ],
+                );
+              },
+            });
+          }
+        }
+      },
+    );
+  };
+  // Detecting App State
+  const appState = useRef(AppState.currentState);
+  const [checkLocation, setCheckLocation] = useState(false);
+  useEffect(() => {
+    const appStateSubscription = AppState.addEventListener(
+      'change',
+      nextAppState => {
+        if (appState.current.match(/background/) && nextAppState === 'active') {
+          setCheckLocation(true);
+          setTimeout(() => {
+            setCheckLocation(false);
+          }, 1000);
+        }
+        appState.current = nextAppState;
+      },
+    );
+    return () => {
+      appStateSubscription.remove();
+    };
+  }, []);
+  useEffect(() => {
+    if (user && checkLocation) {
+      refreshUserLocation();
+    }
+  }, [checkLocation]);
+  const dontShowLocationRequest = () => {
+    setPrefBank({
+      ...prefBank,
+      [user.uid]: true,
+    });
+  };
+  const enableLocationServices = () => {
+    Linking.openSettings();
+  };
   const configureGoogleSignIn = () => {
     GoogleSignin.configure({
       webClientId:
@@ -93,6 +232,11 @@ const App: () => Node = () => {
   let authFlag = true;
   const onAuthStateChanged = async authUser => {
     if (authUser) {
+      requestUserNotificationPermission()
+        .then(() => {
+          updateMessagingToken(authUser.uid).catch(err => console.log(err));
+        })
+        .catch(err => console.log(err));
       // Check user bank to see if user obj exists
       if (authFlag) {
         analytics()
@@ -123,6 +267,7 @@ const App: () => Node = () => {
       }
     }
   };
+
   // Effects
   useEffect(() => {
     LogBox.ignoreAllLogs();
@@ -148,6 +293,7 @@ const App: () => Node = () => {
   }, [user]);
   useEffect(() => {
     if (user) {
+      updateMessagingToken(user.uid).catch(err => console.log(err));
       if (shouldUpdateUser) {
         updateUser(user)
           .then(() => {
@@ -180,6 +326,67 @@ const App: () => Node = () => {
       });
     }
   }, [error, notification]);
+
+  useEffect(() => {
+    dynamicLinks().onLink(link => {
+      console.log('LINKED', link);
+    });
+  }, []);
+  const linking = {
+    prefixes: [
+      'https://ocalanow.app',
+      'https://ocalanow.page.link',
+      'applinks://',
+    ],
+    async getInitialURL() {
+      // First, you would need to get the initial URL from your third-party integration
+      // The exact usage depend on the third-party SDK you use
+      // For example, to get to get the initial URL for Firebase Dynamic Links:
+      const {isAvailable} = utils().playServicesAvailability;
+
+      if (isAvailable) {
+        const initialLink = await dynamicLinks().getInitialLink();
+
+        if (initialLink) {
+          return initialLink.url;
+        }
+      }
+
+      // As a fallback, you may want to do the default deep link handling
+      const url = await Linking.getInitialURL();
+
+      return url;
+    },
+    subscribe(listener) {
+      const unsubscribeDynamicLinks = dynamicLinks().onLink(({url}) => {
+        listener(url);
+      });
+      const linkingSubscription = Linking.addEventListener('url', ({url}) => {
+        listener(url);
+      });
+      return () => {
+        unsubscribeDynamicLinks();
+        linkingSubscription.remove();
+      };
+    },
+    config: {
+      screens: {
+        AppStack: {
+          initialRouteName: 'TabNavigator',
+          screens: {
+            TabNavigator: {
+              screens: {
+                Feed: 'feed',
+              },
+            },
+            CardDetailView: 'cards/:card',
+            TagView: 'tags/:tag',
+          },
+        },
+        AuthStack: {},
+      },
+    },
+  };
   if (initializing) {
     return (
       <NativeBaseProvider theme={appTheme}>
@@ -193,6 +400,7 @@ const App: () => Node = () => {
       <GestureHandlerRootView style={{flex: 1}}>
         <NativeBaseProvider theme={appTheme}>
           <NavigationContainer
+            linking={linking}
             ref={navigationRef}
             onReady={() => {
               routeNameRef.current =

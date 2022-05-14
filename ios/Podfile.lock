@@ -595,6 +595,10 @@ PODS:
   - GTMSessionFetcher/Core (1.7.1)
   - leveldb-library (1.22.1)
   - libevent (2.1.12)
+  - lottie-ios (3.2.3)
+  - lottie-react-native (5.1.2):
+    - lottie-ios (~> 3.2.3)
+    - React-Core
   - MMKV (1.2.13):
     - MMKVCore (~> 1.2.13)
   - MMKVCore (1.2.13)
@@ -970,6 +974,8 @@ PODS:
   - RNScreens (3.13.1):
     - React-Core
     - React-RCTImage
+  - RNShare (7.4.1):
+    - React-Core
   - RNSVG (12.3.0):
     - React-Core
   - RNVectorIcons (9.1.0):
@@ -1008,6 +1014,8 @@ DEPENDENCIES:
   - FlipperKit/SKIOSNetworkPlugin (= 0.125.0)
   - glog (from `../node_modules/react-native/third-party-podspecs/glog.podspec`)
   - GoogleSignIn (~> 6.1.0)
+  - lottie-ios (from `../node_modules/lottie-ios`)
+  - lottie-react-native (from `../node_modules/lottie-react-native`)
   - OpenSSL-Universal (= 1.1.1100)
   - RCT-Folly (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCTRequired (from `../node_modules/react-native/Libraries/RCTRequired`)
@@ -1057,6 +1065,7 @@ DEPENDENCIES:
   - RNReactNativeHapticFeedback (from `../node_modules/react-native-haptic-feedback`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
+  - RNShare (from `../node_modules/react-native-share`)
   - RNSVG (from `../node_modules/react-native-svg`)
   - RNVectorIcons (from `../node_modules/react-native-vector-icons`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
@@ -1119,6 +1128,10 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/React/FBReactNativeSpec"
   glog:
     :podspec: "../node_modules/react-native/third-party-podspecs/glog.podspec"
+  lottie-ios:
+    :path: "../node_modules/lottie-ios"
+  lottie-react-native:
+    :path: "../node_modules/lottie-react-native"
   RCT-Folly:
     :podspec: "../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec"
   RCTRequired:
@@ -1211,6 +1224,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-reanimated"
   RNScreens:
     :path: "../node_modules/react-native-screens"
+  RNShare:
+    :path: "../node_modules/react-native-share"
   RNSVG:
     :path: "../node_modules/react-native-svg"
   RNVectorIcons:
@@ -1260,6 +1275,8 @@ SPEC CHECKSUMS:
   GTMSessionFetcher: 4577a4cc914a5a07c40a8a0ad0acc22080418c2d
   leveldb-library: 50c7b45cbd7bf543c81a468fe557a16ae3db8729
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
+  lottie-ios: c058aeafa76daa4cf64d773554bccc8385d0150e
+  lottie-react-native: fb56093c53bb36d0a7ce576e030b67af33ad6180
   MMKV: aac95d817a100479445633f2b3ed8961b4ac5043
   MMKVCore: 3388952ded307e41b3ed8a05892736a236ed1b8e
   nanopb: a0ba3315591a9ae0a16a309ee504766e90db0c96
@@ -1311,6 +1328,7 @@ SPEC CHECKSUMS:
   RNReactNativeHapticFeedback: 4085973f5a38b40d3c6793a3ee5724773eae045e
   RNReanimated: 64573e25e078ae6bec03b891586d50b9ec284393
   RNScreens: 40a2cb40a02a609938137a1e0acfbf8fc9eebf19
+  RNShare: 2074af48908436c310847c6c47ebb6129db1dc89
   RNSVG: 302bfc9905bd8122f08966dc2ce2d07b7b52b9f8
   RNVectorIcons: 7923e585eaeb139b9f4531d25a125a1500162a0b
   SocketRocket: fccef3f9c5cedea1353a9ef6ada904fde10d6608

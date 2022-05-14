@@ -142,7 +142,35 @@ const AppStack = () => {
           },
           headerTitle: () => <Text> </Text>,
         })}>
-        <Stack.Screen name="CardDetailView" component={CardDetailView} />
+        <Stack.Screen
+          name="CardDetailView"
+          component={CardDetailView}
+          options={({route}) => ({
+            headerTitle: () => {
+              const {card} = route.params;
+              let title = '';
+              if (card.type) {
+                if (card.type === 'event') {
+                  title = card.title;
+                } else if (card.type === 'info') {
+                  title = card.title;
+                } else if (card.type === 'deal') {
+                  title = card.subtitle;
+                }
+              } else {
+                title = 'Shared with you';
+              }
+              return (
+                <Text
+                  _dark={{color: 'primary.200'}}
+                  _light={{color: 'primary.500'}}
+                  italic>
+                  {title}
+                </Text>
+              );
+            },
+          })}
+        />
       </Stack.Group>
     </Stack.Navigator>
   );

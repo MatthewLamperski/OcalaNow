@@ -4,7 +4,11 @@ import auth from '@react-native-firebase/auth';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import appleAuth from '@invertase/react-native-apple-authentication';
 import analytics from '@react-native-firebase/analytics';
+import messaging from '@react-native-firebase/messaging';
+import dynamicLinks from '@react-native-firebase/dynamic-links';
+import Share from 'react-native-share';
 import openMap from 'react-native-open-maps';
+import {Alert} from 'react-native';
 
 // Random Helper Functions
 
@@ -187,7 +191,7 @@ export const getTimeUntilNextUse = (card, user) => {
         .usedOn.toDate();
       const now = new Date();
       const daysSinceLastUse = (now - lastDealUsed) / (1000 * 60 * 60 * 24);
-      return `Redeem again in ${(cooldown - daysSinceLastUse).toFixed(1)} days`;
+      return `Redeem again in ${(cooldown - daysSinceLastUse).toFixed(0)} days`;
     }
   }
 };
@@ -245,6 +249,13 @@ export const openNavigation = (address, uid, card) => {
   });
 };
 export const useDeal = (card, user, setUser) => {
+  const cooldown = card.deal.cooldown ? card.deal.cooldown : 0;
+  Alert.alert(
+    'Deal Redemption',
+    `Please show this screen to an employee.\n\nThis deal is valid and is being redeemed now! This deal can be redeemed again ${
+      cooldown === 0 ? 'immediately' : `in ${cooldown} days.`
+    }\n\nIf you have any questions, please contact OcalaNow at (352)-445-0365`,
+  );
   analytics()
     .logEvent('used_deal', {
       deal: card.docID,
@@ -548,6 +559,151 @@ export const logEvent = (name, event) => {
     analytics()
       .logEvent(name, event)
       .then(() => resolve())
+      .catch(err => reject(err));
+  });
+};
+
+// Messaging Functions
+export const requestUserNotificationPermission = () => {
+  return new Promise((resolve, reject) => {
+    messaging()
+      .requestPermission()
+      .then(authStatus => {
+        const enabled =
+          authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+          authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+        if (enabled) {
+          resolve();
+        } else {
+          reject('Permssion denied');
+        }
+      })
+      .catch(err => reject(err));
+  });
+};
+export const updateMessagingToken = uid => {
+  return new Promise((resolve, reject) => {
+    messaging()
+      .getToken()
+      .then(token => {
+        firestore()
+          .collection('users')
+          .doc(uid)
+          .update({
+            notificationToken: {
+              token,
+              updated: new Date(),
+            },
+          })
+          .then(() => resolve())
+          .catch(err => reject(err));
+      })
+      .catch(err => reject(err));
+  });
+};
+
+// Dynamic Links Functions
+export const shareCardLink = (card, uid) => {
+  return new Promise((resolve, reject) => {
+    let socialTitle = `Check out this ${
+      card.type === 'info' ? 'place' : card.type
+    } I found on OcalaNow!`;
+    if (card.type === 'event') {
+      socialTitle = `Check out ${card.title} on OcalaNow!`;
+    } else if (card.type === 'deal') {
+      socialTitle = `Check out this deal from ${card.subtitle} on OcalaNow!`;
+    } else if (card.type === 'info') {
+      socialTitle = `Check out ${card.title} on OcalaNow!`;
+    }
+    dynamicLinks()
+      .buildShortLink(
+        {
+          link: `https://ocalanow.app/cards/${card.docID}`,
+          domainUriPrefix: 'https://ocalanow.page.link',
+          ios: {
+            bundleId: 'matthewlamperski.OcalaNow',
+            appStoreId: '1566738476',
+            minimumVersion: '2.0',
+          },
+          android: {
+            packageName: 'com.ocalanow',
+          },
+          social: {
+            title: socialTitle,
+            imageUrl: 'https://ocalanow.app/share.png',
+          },
+        },
+        dynamicLinks.ShortLinkType.SHORT,
+      )
+      .then(link => {
+        console.log('link', link);
+        Share.open({
+          message: socialTitle,
+          url: link,
+        })
+          .then(() => {
+            analytics()
+              .logEvent('share_card', {
+                card: card.docID,
+                link,
+                uid: uid,
+              })
+              .then(() => console.log('share_card logged'));
+            resolve();
+          })
+          .catch(err => {
+            console.log(JSON.stringify(err, null, 2));
+            reject(err);
+          });
+      })
+      .catch(err => reject(err));
+  });
+};
+
+export const shareTagLink = (tag, uid) => {
+  return new Promise((resolve, reject) => {
+    let socialTitle = `Check out the ${tag} section on OcalaNow!`;
+    dynamicLinks()
+      .buildShortLink(
+        {
+          link: `https://ocalanow.app/tags/${tag}`,
+          domainUriPrefix: 'https://ocalanow.page.link',
+          ios: {
+            bundleId: 'matthewlamperski.OcalaNow',
+            appStoreId: '1566738476',
+            minimumVersion: '2.0',
+          },
+          android: {
+            packageName: 'com.ocalanow',
+          },
+          social: {
+            title: socialTitle,
+            imageUrl: 'https://ocalanow.app/share.png',
+          },
+        },
+        dynamicLinks.ShortLinkType.SHORT,
+      )
+      .then(link => {
+        console.log('link', link);
+        Share.open({
+          message: socialTitle,
+          url: link,
+        })
+          .then(() => {
+            analytics()
+              .logEvent('share_tag', {
+                card: tag,
+                link,
+                uid: uid,
+              })
+              .then(() => console.log('share_tag logged'));
+            resolve();
+          })
+          .catch(err => {
+            console.log(JSON.stringify(err, null, 2));
+            reject(err);
+          });
+      })
       .catch(err => reject(err));
   });
 };

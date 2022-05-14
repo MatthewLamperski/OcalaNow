@@ -1,12 +1,21 @@
 import React, {useContext, useEffect, useRef, useState} from 'react';
-import {FlatList, HStack, Spinner, Text, useTheme, View} from 'native-base';
-import {getCardsByTag} from '../../FireFunctions';
+import {
+  FlatList,
+  HStack,
+  Pressable,
+  Spinner,
+  Text,
+  useTheme,
+  View,
+} from 'native-base';
+import {getCardsByTag, shareTagLink} from '../../FireFunctions';
 import {AppContext} from '../../AppContext';
 import CardPreviewTile from './Components/CardPreviewTile';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import {MenuView} from '@react-native-menu/menu';
 import {getDistance} from 'geolib';
+import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 
 const TagView = ({route, navigation}) => {
   const {bottom} = useSafeAreaInsets();
@@ -154,18 +163,40 @@ const TagView = ({route, navigation}) => {
               _light={{color: 'primary.500'}}>
               {cards.length} Results
             </Text>
-            <MenuView
-              title="Sort By"
-              onPressAction={onSortPress}
-              actions={actions}>
-              <View p={2}>
+            <HStack space={3} justifyContent="center" alignItems="center">
+              <Pressable
+                onPress={() => {
+                  ReactNativeHapticFeedback.trigger('soft');
+                  shareTagLink(tag, user).catch(err => {
+                    if (!(JSON.stringify(err) === '{}')) {
+                      setError({
+                        title: 'Something went wrong...',
+                        message:
+                          "We couldn't generate a link for that tag. Try again later.",
+                      });
+                    }
+                  });
+                }}>
                 <FontAwesome5
-                  name="sort"
+                  name="share-square"
+                  solid
                   color={colors.primary['500']}
                   size={20}
                 />
-              </View>
-            </MenuView>
+              </Pressable>
+              <MenuView
+                title="Sort By"
+                onPressAction={onSortPress}
+                actions={actions}>
+                <View p={2}>
+                  <FontAwesome5
+                    name="sort"
+                    color={colors.primary['500']}
+                    size={24}
+                  />
+                </View>
+              </MenuView>
+            </HStack>
           </HStack>
         ) : null
       }

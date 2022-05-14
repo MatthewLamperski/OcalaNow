@@ -18,8 +18,7 @@ import {
   View,
 } from 'native-base';
 import MapView, {Circle, Marker} from 'react-native-maps';
-import Geolocation from '@react-native-community/geolocation';
-import {Alert, Linking, useColorScheme} from 'react-native';
+import {useColorScheme} from 'react-native';
 import {AppContext} from '../../AppContext';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
@@ -27,13 +26,12 @@ import BottomSheet, {BottomSheetScrollView} from '@gorhom/bottom-sheet';
 import BottomSheetCard from './Components/BottomSheetCard';
 
 const Discover = ({navigation}) => {
-  const {setNotification, user} = useContext(AppContext);
+  const {currentLocation, user, getUserLocation} = useContext(AppContext);
   const theme = useTheme();
   const colorScheme = useColorScheme();
   const [cards, setCards] = useState();
   const [displayedCards, setDisplayedCards] = useState();
   const [tags, setTags] = useState();
-  const [currentLocation, setCurrentLocation] = useState();
   const [centerRegion, setCenterRegion] = useState();
   const [activeFilters, setActiveFilters] = useState([]);
   const [currentCard, setCurrentCard] = useState();
@@ -46,51 +44,6 @@ const Discover = ({navigation}) => {
     console.log('handleSheetChanges', idx);
   }, []);
 
-  const getCurrentLocation = (title, message) => {
-    Geolocation.requestAuthorization();
-    Geolocation.getCurrentPosition(
-      position => {
-        setCurrentLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        });
-      },
-      error => {
-        if (error.PERMISSION_DENIED) {
-          setNotification({
-            title: title ? title : 'Location not found',
-            message: message
-              ? message
-              : 'OcalaNow works much better with your location. Tap to learn more',
-            onPress: () => {
-              Alert.alert(
-                'Enable Location Services',
-                "OcalaNow uses your location to enhance your experience. We can help you plan your find your way around Ocala! \nTo enable location services, go to settings, and set location services to 'While using the app'.",
-                [
-                  {
-                    text: "Don't Show Again",
-                    onPress: dontShowLocationRequest,
-                    style: 'destructive',
-                  },
-                  {
-                    text: 'Open Settings',
-                    onPress: enableLocationServices,
-                    style: 'cancel',
-                  },
-                ],
-              );
-            },
-          });
-        }
-      },
-    );
-  };
-  const dontShowLocationRequest = () => {
-    console.log("Don't show again");
-  };
-  const enableLocationServices = () => {
-    Linking.openSettings().then(res => console.log(res));
-  };
   const lat = card => {
     switch (card.type) {
       case 'info':
@@ -185,7 +138,7 @@ const Discover = ({navigation}) => {
         longitudeDelta: 0.06299802738402605,
       });
     } else {
-      getCurrentLocation(
+      getUserLocation(
         "Couldn't get walking distance",
         'To use this feature, please enable location services for OcalaNow.',
       );
@@ -248,7 +201,7 @@ const Discover = ({navigation}) => {
     }
   }, [centerRegion]);
   useEffect(() => {
-    getCurrentLocation();
+    getUserLocation();
   }, []);
   useEffect(() => {
     if (activeFilters) {
@@ -444,6 +397,7 @@ const Discover = ({navigation}) => {
               position="absolute"
               bottom={0}>
               <Button
+                py={3}
                 borderRadius={100}
                 onButtonPress={() => {
                   navigation.navigate('CardDetailView', {
