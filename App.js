@@ -43,14 +43,13 @@ import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import Geolocation from '@react-native-community/geolocation';
 import {utils} from '@react-native-firebase/app';
 import dynamicLinks from '@react-native-firebase/dynamic-links';
+import messaging from '@react-native-firebase/messaging';
 
 const App: () => Node = () => {
   const colorScheme = useColorScheme();
   const userStorage = useMMKV();
-  const savedStorage = useMMKV();
   const prefStorage = useMMKV();
   const [userBank, setUserBank] = useMMKVObject('userBank', userStorage);
-  const [savedBank, setSavedBank] = useMMKVObject('savedBank', savedStorage);
   const [prefBank, setPrefBank] = useMMKVObject('prefBank', prefStorage);
   const [shouldUpdateUser, setShouldUpdateUser] = useState(false);
   const [user, setUser] = useState();
@@ -58,6 +57,8 @@ const App: () => Node = () => {
   const [notification, setNotification] = useState();
   const [error, setError] = useState();
   const [currentLocation, setCurrentLocation] = useState();
+  const [saved, setSaved] = useState();
+  const [recycled, setRecycled] = useState();
   const routeNameRef = useRef(null);
   const navigationRef = useRef(null);
   const context = {
@@ -70,8 +71,10 @@ const App: () => Node = () => {
     userBank,
     currentLocation,
     setCurrentLocation,
-    savedBank,
-    setSavedBank,
+    saved,
+    setSaved,
+    recycled,
+    setRecycled,
     prefBank,
     setPrefBank,
     getUserLocation: (
@@ -124,6 +127,16 @@ const App: () => Node = () => {
       );
     },
   };
+  useEffect(() => {
+    messaging().onMessage(message => {
+      const url = message?.data?.link;
+      setNotification({
+        title: message.notification.title,
+        message: message.notification.body,
+        onPress: url ? () => Linking.openURL(url) : () => {},
+      });
+    });
+  }, []);
   // Functions
   const refreshUserLocation = (
     title = 'Location not found',
@@ -292,6 +305,22 @@ const App: () => Node = () => {
     return Auth().onAuthStateChanged(onAuthStateChanged);
   }, []);
   useEffect(() => {
+    if (recycled && user) {
+      setUser({
+        ...user,
+        recycled: recycled,
+      });
+    }
+  }, [recycled]);
+  useEffect(() => {
+    if (saved && user) {
+      setUser({
+        ...user,
+        saved: saved.map(savedCard => savedCard.docID),
+      });
+    }
+  }, [saved]);
+  useEffect(() => {
     if (user) {
       if (userBank) {
         setUserBank({
@@ -368,8 +397,12 @@ const App: () => Node = () => {
 
       // As a fallback, you may want to do the default deep link handling
       const url = await Linking.getInitialURL();
+      if (url !== null) {
+        return url;
+      }
 
-      return url;
+      const message = await messaging().getInitialNotification();
+      return message?.data?.link;
     },
     subscribe(listener) {
       const unsubscribeDynamicLinks = dynamicLinks().onLink(({url}) => {
@@ -378,8 +411,18 @@ const App: () => Node = () => {
       const linkingSubscription = Linking.addEventListener('url', ({url}) => {
         listener(url);
       });
+      const unsubscribeNotification = messaging().onNotificationOpenedApp(
+        message => {
+          console.log('Noty opened app', JSON.stringify(message, null, 3));
+          const url = message?.data?.link;
+          if (url) {
+            listener(url);
+          }
+        },
+      );
       return () => {
         unsubscribeDynamicLinks();
+        unsubscribeNotification();
         linkingSubscription.remove();
       };
     },
@@ -389,8 +432,12 @@ const App: () => Node = () => {
           initialRouteName: 'TabNavigator',
           screens: {
             TabNavigator: {
+              initialRouteName: 'Home',
               screens: {
+                Home: 'home',
                 Feed: 'feed',
+                Discover: 'discover',
+                Profile: 'saved',
               },
             },
             CardDetailView: 'cards/:card',

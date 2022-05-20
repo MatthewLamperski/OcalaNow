@@ -52,7 +52,6 @@ export const getNextEventDateObj = card => {
       return date;
     } else if (frequency === 'weekly') {
       let now = new Date();
-      console.log(card.docID, frequency, date > now);
       if (date > now) {
         return date;
       } else {
@@ -106,7 +105,6 @@ export const getNextEventDate = card => {
       return `${month} ${day}, ${time}`;
     } else if (frequency === 'weekly') {
       let now = new Date();
-      console.log(card.docID, frequency, date > now);
       if (date > now) {
         const month = date.toLocaleString('default', {month: 'long'});
         const day = date.toLocaleString('default', {day: 'numeric'});
@@ -448,6 +446,7 @@ export const getCards = () => {
   return new Promise((resolve, reject) => {
     firestore()
       .collection('cards')
+      .where('display', '==', true)
       .get()
       .then(querySnapshot => {
         resolve(
@@ -463,6 +462,7 @@ export const getCardsByTag = tag => {
     firestore()
       .collection('cards')
       .where('tags', 'array-contains', tag)
+      .where('display', '==', true)
       .get()
       .then(querySnapshot => {
         if (!querySnapshot.empty) {

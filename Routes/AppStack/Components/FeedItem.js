@@ -102,8 +102,8 @@ const FeedItem = ({item, navigation}) => {
             justifyContent="center"
             alignItems="flex-start"
             space={3}>
-            {item.cards.map(card => (
-              <CardPreview navigation={navigation} cardObj={card} />
+            {item.cards.map((card, idx) => (
+              <CardPreview key={idx} navigation={navigation} cardObj={card} />
             ))}
           </HStack>
         </ScrollView>

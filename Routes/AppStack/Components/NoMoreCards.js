@@ -6,9 +6,9 @@ import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 
 const NoMoreCards = ({
   handleUnrecycle,
-  setShowButtons,
-  setCurrentIdx,
   recycled,
+  title = "We couldn't find anything else right now...",
+  subtitle = 'OcalaNow is updated daily. Check back later for new deals, specials, and live events going on in Ocala!',
 }) => {
   const animationRef = useRef(null);
   const progress = useRef(new Animated.Value(0)).current;
@@ -19,26 +19,24 @@ const NoMoreCards = ({
     if (animationRef.current) {
       animationRef.current.play(0, 90);
     }
-    setShowButtons(false);
   }, []);
   return (
     <View flex={1}>
       <Text fontWeight={300} fontSize={24}>
-        We couldn't find anything else right now...
+        {title}
       </Text>
       <Text
         _light={{color: 'muted.500'}}
         _dark={{color: 'muted.400'}}
         fontWeight={200}
         fontSize={14}>
-        OcalaNow is updated daily. Check back later for new deals, specials, and
-        live events going on in Ocala!
+        {subtitle}
       </Text>
       <Pressable
         onPress={() => {
           if (animationRef.current) {
             ReactNativeHapticFeedback.trigger('soft');
-            animationRef.current.play(0, 90);
+            animationRef.current.play(0, 80);
           }
         }}
         justifyContent="center"
@@ -52,11 +50,10 @@ const NoMoreCards = ({
         />
       </Pressable>
       <View my={5}>
-        {recycled.length > 0 && (
+        {recycled && recycled.length > 0 && (
           <Button
             borderRadius={100}
             onButtonPress={() => {
-              setCurrentIdx(0);
               handleUnrecycle();
             }}>
             View Recycled

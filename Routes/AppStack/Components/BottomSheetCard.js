@@ -301,7 +301,7 @@ const BottomSheetCard = ({card, navigation, currentLocation}) => {
           )}
         </VStack>
       </HStack>
-      <View my={2} h={60}>
+      <View borderRadius={20} overflow="hidden" my={2} h={60}>
         <MapView
           onPress={() => {
             Alert.alert(
@@ -409,7 +409,7 @@ const BottomSheetCard = ({card, navigation, currentLocation}) => {
         )}
         <HStack alignItems="center" justifyContent="flex-start" space={2}>
           {currentLocation && (
-            <>
+            <HStack justifyContent="center" alignItems="center" space={2}>
               <FontAwesome5
                 name={getDistanceBetween() > 1.5 ? 'car' : 'walking'}
                 size={16}
@@ -422,7 +422,7 @@ const BottomSheetCard = ({card, navigation, currentLocation}) => {
               <Text shadow={3} fontWeight={300}>
                 {getDistanceBetween()} mi
               </Text>
-            </>
+            </HStack>
           )}
           <FontAwesome5
             name="map-marker-alt"

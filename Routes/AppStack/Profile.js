@@ -1,59 +1,21 @@
-import React, {useContext, useEffect, useRef, useState} from 'react';
-import {FlatList, HStack, Spinner, Text, useTheme, View} from 'native-base';
+import React, {useContext, useRef, useState} from 'react';
+import {HStack, Spinner, Text, useTheme, View} from 'native-base';
 import {AppContext} from '../../AppContext';
-import CardPreviewTile from './Components/CardPreviewTile';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import CardPreviewTile from './Components/CardPreviewTile';
+import {FlatList, useColorScheme} from 'react-native';
+import NoMoreCards from './Components/NoMoreCards';
 
 const Profile = ({navigation}) => {
   const {colors} = useTheme();
+  const colorscheme = useColorScheme();
   const {bottom} = useSafeAreaInsets();
-  const {user, savedBank, setSavedBank, currentLocation} =
-    useContext(AppContext);
+  const {user, currentLocation, saved, setSaved} = useContext(AppContext);
   const [sort, setSort] = useState();
-  const [cards, setCards] = useState();
-  useEffect(() => {
-    if (savedBank && savedBank[user.uid]) {
-      if (cards) {
-        if (savedBank[user.uid].length !== cards.length) {
-          setCards(savedBank[user.uid].reverse());
-        }
-      } else {
-        setCards(savedBank[user.uid].reverse());
-      }
-    }
-  }, [savedBank]);
   const flatListRef = useRef(null);
   const onSortPress = ({nativeEvent: {event}}) => {
     setSort(event);
   };
-  // useEffect(() => {
-  //   if (cards && sort) {
-  //     if (sort === 'closest') {
-  //       setCards(prevState => [
-  //         ...prevState.sort((a, b) => {
-  //           const distA = Number(
-  //             getDistance(
-  //               {lat: lat(a), lng: lng(a)},
-  //               {lat: currentLocation.lat, lng: currentLocation.lng},
-  //             ),
-  //           );
-  //           const distB = Number(
-  //             getDistance(
-  //               {lat: lat(b), lng: lng(b)},
-  //               {
-  //                 lat: currentLocation.lat,
-  //                 lng: currentLocation.lng,
-  //               },
-  //             ),
-  //           );
-  //           return distA > distB;
-  //         }),
-  //       ]);
-  //     } else if (sort === 'match') {
-  //       setCards(prevState => [...prevState.sort(sortCardsByMatch)]);
-  //     }
-  //   }
-  // }, [sort]);
   const actions = [
     ...(currentLocation
       ? [
@@ -115,48 +77,47 @@ const Profile = ({navigation}) => {
 
     return overallMatch1 < overallMatch2;
   };
-  return (
-    <View flex={1}>
+  if (saved && saved.length === 0) {
+    return (
+      <View flex={1} p={5}>
+        <NoMoreCards
+          title="Nothing saved yet..."
+          subtitle="Head over to the Home tab and see if you see anything you like!"
+        />
+      </View>
+    );
+  } else {
+    return (
       <FlatList
+        initialNumToRender={5}
         ListHeaderComponent={
-          cards ? (
+          saved ? (
             <HStack px={4} pt={2} justifyContent="flex-end" alignItems="center">
               <Text
                 fontWeight={300}
                 italic
                 _dark={{color: 'primary.200'}}
                 _light={{color: 'primary.500'}}>
-                {savedBank[user.uid] ? savedBank[user.uid].length : 'None'}{' '}
-                Saved
+                {saved ? saved.length : 'None'} Saved
               </Text>
             </HStack>
           ) : null
         }
-        _light={{bg: 'muted.100'}}
-        _dark={{bg: 'muted.800'}}
+        style={{
+          backgroundColor:
+            colorscheme === 'dark' ? colors.muted['800'] : colors.muted['100'],
+        }}
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={{paddingBottom: bottom}}
-        data={cards}
+        data={saved}
         ref={flatListRef}
         renderItem={({item}) => (
-          <CardPreviewTile
-            scrollToTop={() => {
-              if (flatListRef.current) {
-                flatListRef.current.scrollToOffset({
-                  animated: true,
-                  offset: 0,
-                });
-              }
-            }}
-            card={item}
-            navigation={navigation}
-            unsave
-          />
+          <CardPreviewTile card={item} navigation={navigation} unsave />
         )}
         keyExtractor={(item, index) => item.docID}
         ListEmptyComponent={
-          cards ? (
-            <Text>Nothing to see here!</Text>
+          saved ? (
+            <View p={3} flex={1} />
           ) : (
             <Spinner p={5} color="primary.500" />
           )
@@ -170,8 +131,8 @@ const Profile = ({navigation}) => {
           />
         )}
       />
-    </View>
-  );
+    );
+  }
 };
 
 export default Profile;

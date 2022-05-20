@@ -1,5 +1,13 @@
 import React, {useContext, useEffect, useRef, useState} from 'react';
-import {HStack, Pressable, Text, useTheme, View, VStack} from 'native-base';
+import {
+  HStack,
+  PresenceTransition,
+  Pressable,
+  Text,
+  useTheme,
+  View,
+  VStack,
+} from 'native-base';
 import {
   getAsset,
   getNextEventDate,
@@ -18,8 +26,8 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import {getDistance} from 'geolib';
 import {AppContext} from '../../../AppContext';
 import MapView, {Marker} from 'react-native-maps';
-import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import analytics from '@react-native-firebase/analytics';
+import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 
 const Card = ({card, currentLocation, navigation}) => {
   const theme = useTheme();
@@ -38,10 +46,11 @@ const Card = ({card, currentLocation, navigation}) => {
       .then(() => console.log('card_seen logged'));
   }, []);
   useEffect(() => {
+    setLogo(undefined);
     getAsset('logo', card.docID)
       .then(url => setLogo(url))
       .catch(err => console.log(err));
-  }, []);
+  }, [card.docID]);
 
   useEffect(() => {
     const tags = card.tags;
@@ -147,7 +156,10 @@ const Card = ({card, currentLocation, navigation}) => {
   };
 
   return (
-    <>
+    <PresenceTransition
+      initial={{opacity: 0, scale: 0.5}}
+      animate={{opacity: 1, scale: 1, transition: {duration: 300}}}
+      visible>
       <View bg="transparent" w="100%" h="100%">
         <Pressable
           onPress={() => {
@@ -265,10 +277,7 @@ const Card = ({card, currentLocation, navigation}) => {
           </Pressable>
           <HStack space={2} justifyContent="flex-start" alignItems="baseline">
             {card.type === 'event' && (
-              <HStack
-                justifyContent="flex-start"
-                alignItems="baseline"
-                space={2}>
+              <HStack justifyContent="center" alignItems="center" space={2}>
                 <FontAwesome5
                   name="calendar-alt"
                   size={16}
@@ -280,7 +289,7 @@ const Card = ({card, currentLocation, navigation}) => {
               </HStack>
             )}
             {currentLocation && (
-              <>
+              <HStack justifyContent="center" alignItems="center" space={2}>
                 <FontAwesome5
                   name={getDistanceBetween() > 1.5 ? 'car' : 'walking'}
                   size={16}
@@ -289,14 +298,14 @@ const Card = ({card, currentLocation, navigation}) => {
                 <Text shadow={3} fontWeight={300}>
                   {getDistanceBetween()} mi
                 </Text>
-              </>
+              </HStack>
             )}
           </HStack>
           {card.tags && (
             <HStack flexWrap="wrap" space={2} py={1}>
               {card.tags.slice(0, 3).map(tag => (
                 <Pressable
-                  key={JSON.stringify(tag)}
+                  key={tag}
                   onPress={() => {
                     ReactNativeHapticFeedback.trigger('soft');
                     navigation.navigate('TagView', {
@@ -354,7 +363,7 @@ const Card = ({card, currentLocation, navigation}) => {
           </Pressable>
         </VStack>
       </View>
-    </>
+    </PresenceTransition>
   );
 };
 

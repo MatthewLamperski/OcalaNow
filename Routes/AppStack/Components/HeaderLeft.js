@@ -3,7 +3,7 @@ import {getFocusedRouteNameFromRoute} from '@react-navigation/native';
 import {Pressable, useTheme} from 'native-base';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
-import {useColorScheme} from 'react-native';
+import {Platform, useColorScheme} from 'react-native';
 
 const HeaderLeft = ({route, navigation}) => {
   const getHeaderTitle = () => {
@@ -15,6 +15,7 @@ const HeaderLeft = ({route, navigation}) => {
     case 'Profile':
       return (
         <Pressable
+          pr={Platform.select({android: 7, ios: 0})}
           p={2}
           onPress={() => {
             ReactNativeHapticFeedback.trigger('soft');
@@ -34,6 +35,7 @@ const HeaderLeft = ({route, navigation}) => {
     case 'Home':
       return (
         <Pressable
+          pr={Platform.select({android: 7, ios: 0})}
           p={2}
           onPress={() => {
             ReactNativeHapticFeedback.trigger('soft');
