@@ -25,10 +25,12 @@
                 android:windowSoftInputMode="adjustResize"
                 android:exported="true">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
                 <data android:host="ocalanow.app" android:scheme="https"/>
                 <data android:host="ocalanow.page.link" android:scheme="https"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
     </application>

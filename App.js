@@ -44,6 +44,7 @@ import Geolocation from '@react-native-community/geolocation';
 import {utils} from '@react-native-firebase/app';
 import dynamicLinks from '@react-native-firebase/dynamic-links';
 import messaging from '@react-native-firebase/messaging';
+import firestore from '@react-native-firebase/firestore';
 
 const App: () => Node = () => {
   const colorScheme = useColorScheme();
@@ -222,10 +223,16 @@ const App: () => Node = () => {
     Linking.openSettings();
   };
   const configureGoogleSignIn = () => {
-    GoogleSignin.configure({
-      webClientId:
-        '28992864864-1unij7fj1jq5jdlapibrr2k9ecdfo4f8.apps.googleusercontent.com',
-    });
+    firestore()
+      .doc('app/appInfo')
+      .get()
+      .then(docSnapshot => {
+        const {googleSignInClient} = docSnapshot.data();
+        GoogleSignin.configure({
+          webClientId: googleSignInClient,
+        });
+      })
+      .catch(err => {});
   };
   const firstTimeSigningIn = userCred => {
     getUser(userCred.uid)

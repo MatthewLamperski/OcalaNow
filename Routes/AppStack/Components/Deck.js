@@ -68,7 +68,7 @@ const Deck = ({cards, renderCard, refresh, navigation, getInitialCards}) => {
           friction: 4,
         }).start();
       });
-    }, 8000);
+    }, 15000);
     return () => clearTimeout(lag);
   }, [currentIdx]);
   useEffect(() => {
@@ -111,10 +111,11 @@ const Deck = ({cards, renderCard, refresh, navigation, getInitialCards}) => {
       restDisplacementThreshold: 100,
       useNativeDriver: false,
     }).start(() => {
+      setCurrentIdx(prevState => prevState + 1);
       if (!recycled.includes(cards[currentIdx].docID)) {
         setRecycled(prevState => [...prevState, cards[currentIdx].docID]);
       }
-      setCurrentIdx(prevState => prevState + 1);
+
       setActionsDisabled(false);
     });
   };

@@ -1,4 +1,4 @@
-import React, {useContext, useEffect, useRef, useState} from 'react';
+import React, {useContext, useEffect, useMemo, useRef, useState} from 'react';
 import {
   HStack,
   PresenceTransition,
@@ -28,6 +28,7 @@ import {AppContext} from '../../../AppContext';
 import MapView, {Marker} from 'react-native-maps';
 import analytics from '@react-native-firebase/analytics';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
+import {darkMapStyle, lightMapStyle} from '../Discover';
 
 const Card = ({card, currentLocation, navigation}) => {
   const theme = useTheme();
@@ -63,7 +64,7 @@ const Card = ({card, currentLocation, navigation}) => {
     const overallMatch = tagMatchLevel * interestsMatchLevel;
   }, []);
 
-  const lat = () => {
+  const lat = useMemo(() => {
     switch (card.type) {
       case 'info':
         return card.data.company.location.coordinate.lat;
@@ -72,8 +73,8 @@ const Card = ({card, currentLocation, navigation}) => {
       case 'event':
         return card.event.location.coordinate.lat;
     }
-  };
-  const lng = () => {
+  }, [card.type]);
+  const lng = useMemo(() => {
     switch (card.type) {
       case 'info':
         return card.data.company.location.coordinate.lng;
@@ -82,48 +83,54 @@ const Card = ({card, currentLocation, navigation}) => {
       case 'event':
         return card.event.location.coordinate.lng;
     }
-  };
+  }, [card.type]);
 
-  const getDistanceBetween = () => {
-    return Number(
-      getDistance(
-        {lat: lat(), lng: lng()},
-        {lat: currentLocation.lat, lng: currentLocation.lng},
-      ) * 0.000621,
-    ).toFixed(1);
-  };
+  const getDistanceBetween = useMemo(() => {
+    if (currentLocation) {
+      return Number(
+        getDistance(
+          {lat: lat, lng: lng},
+          {lat: currentLocation.lat, lng: currentLocation.lng},
+        ) * 0.000621,
+      ).toFixed(1);
+    } else {
+      return null;
+    }
+  }, [currentLocation, lat, lng]);
 
   const fitToMarker = () => {
     if (mapRef.current) {
       const coordinates = currentLocation
         ? [
             {
-              latitude: lat(),
-              longitude: lng(),
+              latitude: lat,
+              longitude: lng,
             },
             {latitude: currentLocation.lat, longitude: currentLocation.lng},
           ]
         : [
             {
-              latitude: lat(),
-              longitude: lng(),
+              latitude: lat,
+              longitude: lng,
             },
           ];
-      mapRef.current.fitToCoordinates(coordinates, {
-        edgePadding: currentLocation
-          ? {top: 15, bottom: 15, left: 100, right: 100}
-          : {
-              top: 100,
-              bottom: 100,
-              left: 100,
-              right: 100,
-            },
-        animated: true,
-      });
+      requestAnimationFrame(() =>
+        mapRef.current.fitToCoordinates(coordinates, {
+          edgePadding: currentLocation
+            ? {top: 15, bottom: 15, left: 20, right: 20}
+            : {
+                top: 20,
+                bottom: 20,
+                left: 20,
+                right: 20,
+              },
+          animated: true,
+        }),
+      );
     }
   };
 
-  const address = () => {
+  const address = useMemo(() => {
     switch (card.type) {
       case 'info':
         return card.data.company.location.address + ' Ocala, FL';
@@ -132,28 +139,7 @@ const Card = ({card, currentLocation, navigation}) => {
       case 'deal':
         return card.deal.company.location.address + ' Ocala, FL';
     }
-  };
-  const phone = () => {
-    switch (card.type) {
-      case 'info':
-        return card.data.company.phone;
-      case 'event':
-        return card.event.contact.phone;
-      case 'deal':
-        return card.deal.company.phone;
-    }
-  };
-
-  const website = () => {
-    switch (card.type) {
-      case 'info':
-        return card.data.company.website;
-      case 'event':
-        return card.event.contact.website;
-      case 'deal':
-        return card.deal.company.website;
-    }
-  };
+  }, [card.type]);
 
   return (
     <PresenceTransition
@@ -216,7 +202,7 @@ const Card = ({card, currentLocation, navigation}) => {
                     text: 'Open',
                     style: 'default',
                     onPress: () => {
-                      openNavigation(address(), user.uid, card);
+                      openNavigation(address, user.uid, card);
                     },
                   },
                 ],
@@ -224,12 +210,16 @@ const Card = ({card, currentLocation, navigation}) => {
             }}
             position="relative"
             width="100%"
-            style={{height: 75}}
+            style={{height: 80}}
             shadow={3}
-            borderRadius={20}
+            borderRadius={10}
             overflow="hidden"
             my={2}>
             <MapView
+              showsMyLocationButton={false}
+              customMapStyle={
+                colorScheme === 'dark' ? darkMapStyle : lightMapStyle
+              }
               pitchEnabled={false}
               rotateEnabled={false}
               scrollEnabled={false}
@@ -241,13 +231,13 @@ const Card = ({card, currentLocation, navigation}) => {
               ref={mapRef}
               style={{flex: 1, borderRadius: 20, position: 'relative'}}
               initialRegion={{
-                latitude: lat(),
-                longitude: lng(),
+                latitude: lat,
+                longitude: lng,
                 latitudeDelta: 0.001,
                 longitudeDelta: 0.001,
               }}
               onMapReady={fitToMarker}>
-              <Marker coordinate={{latitude: lat(), longitude: lng()}}>
+              <Marker coordinate={{latitude: lat, longitude: lng}}>
                 <View
                   display="flex"
                   bg="primary.500"
@@ -291,12 +281,12 @@ const Card = ({card, currentLocation, navigation}) => {
             {currentLocation && (
               <HStack justifyContent="center" alignItems="center" space={2}>
                 <FontAwesome5
-                  name={getDistanceBetween() > 1.5 ? 'car' : 'walking'}
+                  name={getDistanceBetween > 1.5 ? 'car' : 'walking'}
                   size={16}
                   color={colorScheme === 'dark' ? 'white' : 'black'}
                 />
                 <Text shadow={3} fontWeight={300}>
-                  {getDistanceBetween()} mi
+                  {getDistanceBetween} mi
                 </Text>
               </HStack>
             )}

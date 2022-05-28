@@ -17,24 +17,224 @@ import {
   useTheme,
   View,
 } from 'native-base';
-import MapView, {Circle, Marker} from 'react-native-maps';
+import MapView, {Circle} from 'react-native-maps';
 import {useColorScheme} from 'react-native';
 import {AppContext} from '../../AppContext';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import BottomSheet, {BottomSheetScrollView} from '@gorhom/bottom-sheet';
 import BottomSheetCard from './Components/BottomSheetCard';
+import CustomMarker from './Components/CustomMarker';
+
+export const lightMapStyle = [
+  {
+    featureType: 'poi.business',
+    stylers: [
+      {
+        visibility: 'off',
+      },
+    ],
+  },
+  {
+    featureType: 'poi.park',
+    elementType: 'labels.text',
+    stylers: [
+      {
+        visibility: 'off',
+      },
+    ],
+  },
+];
+
+export const darkMapStyle = [
+  {
+    elementType: 'geometry',
+    stylers: [
+      {
+        color: '#242f3e',
+      },
+    ],
+  },
+  {
+    elementType: 'labels.text.fill',
+    stylers: [
+      {
+        color: '#746855',
+      },
+    ],
+  },
+  {
+    elementType: 'labels.text.stroke',
+    stylers: [
+      {
+        color: '#242f3e',
+      },
+    ],
+  },
+  {
+    featureType: 'administrative.locality',
+    elementType: 'labels.text.fill',
+    stylers: [
+      {
+        color: '#d59563',
+      },
+    ],
+  },
+  {
+    featureType: 'poi',
+    elementType: 'labels.text.fill',
+    stylers: [
+      {
+        color: '#d59563',
+      },
+    ],
+  },
+  {
+    featureType: 'poi.business',
+    stylers: [
+      {
+        visibility: 'off',
+      },
+    ],
+  },
+  {
+    featureType: 'poi.park',
+    elementType: 'geometry',
+    stylers: [
+      {
+        color: '#263c3f',
+      },
+    ],
+  },
+  {
+    featureType: 'poi.park',
+    elementType: 'labels.text',
+    stylers: [
+      {
+        visibility: 'off',
+      },
+    ],
+  },
+  {
+    featureType: 'poi.park',
+    elementType: 'labels.text.fill',
+    stylers: [
+      {
+        color: '#6b9a76',
+      },
+    ],
+  },
+  {
+    featureType: 'road',
+    elementType: 'geometry',
+    stylers: [
+      {
+        color: '#38414e',
+      },
+    ],
+  },
+  {
+    featureType: 'road',
+    elementType: 'geometry.stroke',
+    stylers: [
+      {
+        color: '#212a37',
+      },
+    ],
+  },
+  {
+    featureType: 'road',
+    elementType: 'labels.text.fill',
+    stylers: [
+      {
+        color: '#9ca5b3',
+      },
+    ],
+  },
+  {
+    featureType: 'road.highway',
+    elementType: 'geometry',
+    stylers: [
+      {
+        color: '#746855',
+      },
+    ],
+  },
+  {
+    featureType: 'road.highway',
+    elementType: 'geometry.stroke',
+    stylers: [
+      {
+        color: '#1f2835',
+      },
+    ],
+  },
+  {
+    featureType: 'road.highway',
+    elementType: 'labels.text.fill',
+    stylers: [
+      {
+        color: '#f3d19c',
+      },
+    ],
+  },
+  {
+    featureType: 'transit',
+    elementType: 'geometry',
+    stylers: [
+      {
+        color: '#2f3948',
+      },
+    ],
+  },
+  {
+    featureType: 'transit.station',
+    elementType: 'labels.text.fill',
+    stylers: [
+      {
+        color: '#d59563',
+      },
+    ],
+  },
+  {
+    featureType: 'water',
+    elementType: 'geometry',
+    stylers: [
+      {
+        color: '#17263c',
+      },
+    ],
+  },
+  {
+    featureType: 'water',
+    elementType: 'labels.text.fill',
+    stylers: [
+      {
+        color: '#515c6d',
+      },
+    ],
+  },
+  {
+    featureType: 'water',
+    elementType: 'labels.text.stroke',
+    stylers: [
+      {
+        color: '#17263c',
+      },
+    ],
+  },
+];
 
 const Discover = ({navigation}) => {
   const {currentLocation, user, getUserLocation} = useContext(AppContext);
   const theme = useTheme();
   const colorScheme = useColorScheme();
   const [cards, setCards] = useState();
-  const [displayedCards, setDisplayedCards] = useState();
   const [tags, setTags] = useState();
   const [centerRegion, setCenterRegion] = useState();
   const [activeFilters, setActiveFilters] = useState([]);
   const [currentCard, setCurrentCard] = useState();
+  const [tracksViewChanges, setTracksViewChanges] = useState(true);
   const mapRef = useRef(null);
 
   //Bottom Sheet stuff
@@ -44,36 +244,6 @@ const Discover = ({navigation}) => {
     console.log('handleSheetChanges', idx);
   }, []);
 
-  const lat = card => {
-    switch (card.type) {
-      case 'info':
-        return card.data.company.location.coordinate.lat;
-      case 'deal':
-        return card.deal.company.location.coordinate.lat;
-      case 'event':
-        return card.event.location.coordinate.lat;
-    }
-  };
-  const lng = card => {
-    switch (card.type) {
-      case 'info':
-        return card.data.company.location.coordinate.lng;
-      case 'deal':
-        return card.deal.company.location.coordinate.lng;
-      case 'event':
-        return card.event.location.coordinate.lng;
-    }
-  };
-  const icon = card => {
-    switch (card.type) {
-      case 'info':
-        return 'store-alt';
-      case 'deal':
-        return 'tags';
-      case 'event':
-        return 'calendar-alt';
-    }
-  };
   const filterBackground = filter =>
     activeFilters.includes(filter)
       ? 'primary.500'
@@ -147,12 +317,6 @@ const Discover = ({navigation}) => {
   const onPressFilter = filter => {
     ReactNativeHapticFeedback.trigger('soft');
     if (activeFilters.includes(filter)) {
-      console.log(
-        'Pre',
-        [...activeFilters.slice(0, activeFilters.indexOf(filter))],
-        'Post',
-        [...activeFilters.slice(activeFilters.indexOf(filter) + 1)],
-      );
       setActiveFilters(prevState => [
         ...prevState.slice(0, prevState.indexOf(filter)),
         ...prevState.slice(prevState.indexOf(filter) + 1),
@@ -203,20 +367,15 @@ const Discover = ({navigation}) => {
   useEffect(() => {
     getUserLocation();
   }, []);
-  useEffect(() => {
-    if (activeFilters) {
-      console.log(activeFilters);
-    } else {
-      setDisplayedCards();
-    }
-  }, [activeFilters]);
 
   return (
     <View style={{flex: 1}}>
       <MapView
-        onRegionChange={() => bottomSheetRef.current.collapse()}
+        customMapStyle={colorScheme === 'dark' ? darkMapStyle : lightMapStyle}
+        onRegionChange={() => bottomSheetRef.current.snapToIndex(0)}
         showsCompass={false}
         showsTraffic={false}
+        showsBuildings={false}
         ref={mapRef}
         showsUserLocation={true}
         showsPointsOfInterest={false}
@@ -246,31 +405,12 @@ const Discover = ({navigation}) => {
           />
         )}
         {cards &&
-          (displayedCards ? displayedCards : cards).map(card => (
-            <Marker
-              onPress={() => {
-                onMarkerPress(card);
-              }}
-              key={card.docID}
-              coordinate={{latitude: lat(card), longitude: lng(card)}}>
-              <Pressable>
-                <PresenceTransition
-                  initial={{opacity: 0}}
-                  visible
-                  animate={{opacity: 1, transition: {duration: 500}}}>
-                  <View
-                    opacity={markerOpacity(card)}
-                    p={1.5}
-                    shadow={3}
-                    bg="primary.500"
-                    rounded="2xl"
-                    justifyContent="center"
-                    alignItems="center">
-                    <FontAwesome5 name={icon(card)} color="white" size={14} />
-                  </View>
-                </PresenceTransition>
-              </Pressable>
-            </Marker>
+          cards.map(card => (
+            <CustomMarker
+              card={card}
+              filters={activeFilters}
+              onPress={onMarkerPress}
+            />
           ))}
       </MapView>
       <ScrollView

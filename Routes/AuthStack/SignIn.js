@@ -238,18 +238,6 @@ const SignIn = ({navigation}) => {
                   placeholder="Password"
                   onSubmitEditing={handleSignIn}
                 />
-                <Pressable
-                  mx={3}
-                  py={2}
-                  px={2}
-                  justifyContent="center"
-                  alignItems="flex-end">
-                  {({isPressed}) => (
-                    <Text opacity={isPressed ? 0.3 : 1} color="primary.400">
-                      Recover password
-                    </Text>
-                  )}
-                </Pressable>
                 <Box
                   style={{
                     flexDirection: 'row',

@@ -1,4 +1,4 @@
-import React, {useContext, useEffect, useRef, useState} from 'react';
+import React, {useContext, useEffect, useMemo, useRef, useState} from 'react';
 import {
   Box,
   Button,
@@ -42,6 +42,7 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import SocialLink from './Components/SocialLink';
 import LinearGradient from 'react-native-linear-gradient';
 import analytics from '@react-native-firebase/analytics';
+import {darkMapStyle, lightMapStyle} from './Discover';
 
 const CardDetailView = ({route, navigation}) => {
   const {bottom} = useSafeAreaInsets();
@@ -83,7 +84,7 @@ const CardDetailView = ({route, navigation}) => {
         .catch(err => setCard(null));
     }
   }, []);
-  const lat = () => {
+  const lat = useMemo(() => {
     switch (card.type) {
       case 'info':
         return card.data.company.location.coordinate.lat;
@@ -92,8 +93,8 @@ const CardDetailView = ({route, navigation}) => {
       case 'event':
         return card.event.location.coordinate.lat;
     }
-  };
-  const lng = () => {
+  }, [card.type]);
+  const lng = useMemo(() => {
     switch (card.type) {
       case 'info':
         return card.data.company.location.coordinate.lng;
@@ -102,7 +103,7 @@ const CardDetailView = ({route, navigation}) => {
       case 'event':
         return card.event.location.coordinate.lng;
     }
-  };
+  }, [card.type]);
   const mapSubtitle = () => {
     switch (card.type) {
       case 'info':
@@ -117,7 +118,10 @@ const CardDetailView = ({route, navigation}) => {
   const getDistanceBetween = () => {
     return Number(
       getDistance(
-        {lat: lat(), lng: lng()},
+        {
+          lat: lat,
+          lng: lng,
+        },
         {lat: currentLocation.lat, lng: currentLocation.lng},
       ) * 0.000621,
     ).toFixed(1);
@@ -128,28 +132,30 @@ const CardDetailView = ({route, navigation}) => {
       const coordinates = currentLocation
         ? [
             {
-              latitude: lat(),
-              longitude: lng(),
+              latitude: lat,
+              longitude: lng,
             },
             {latitude: currentLocation.lat, longitude: currentLocation.lng},
           ]
         : [
             {
-              latitude: lat(),
-              longitude: lng(),
+              latitude: lat,
+              longitude: lng,
             },
           ];
-      mapRef.current.fitToCoordinates(coordinates, {
-        edgePadding: currentLocation
-          ? {top: 15, bottom: 15, left: 100, right: 100}
-          : {
-              top: 100,
-              bottom: 100,
-              left: 100,
-              right: 100,
-            },
-        animated: true,
-      });
+      requestAnimationFrame(() =>
+        mapRef.current.fitToCoordinates(coordinates, {
+          edgePadding: currentLocation
+            ? {top: 15, bottom: 15, left: 100, right: 100}
+            : {
+                top: 20,
+                bottom: 20,
+                left: 20,
+                right: 20,
+              },
+          animated: true,
+        }),
+      );
     }
   };
 
@@ -337,11 +343,15 @@ const CardDetailView = ({route, navigation}) => {
                   ],
                 );
               }}
-              style={{height: 175, width: '100%'}}
+              style={{height: 150, width: '100%'}}
               shadow={3}
               borderRadius={20}
               my={2}>
               <MapView
+                customMapStyle={
+                  colorScheme === 'dark' ? darkMapStyle : lightMapStyle
+                }
+                showsMyLocationButton={false}
                 pitchEnabled={false}
                 rotateEnabled={false}
                 scrollEnabled={false}
@@ -359,13 +369,17 @@ const CardDetailView = ({route, navigation}) => {
                   left: 0,
                 }}
                 initialRegion={{
-                  latitude: lat(),
-                  longitude: lng(),
+                  latitude: lat,
+                  longitude: lng,
                   latitudeDelta: 0.001,
                   longitudeDelta: 0.001,
                 }}
                 onMapReady={fitToMarker}>
-                <Marker coordinate={{latitude: lat(), longitude: lng()}}>
+                <Marker
+                  coordinate={{
+                    latitude: lat,
+                    longitude: lng,
+                  }}>
                   <View
                     display="flex"
                     bg="primary.500"

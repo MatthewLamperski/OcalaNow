@@ -101,14 +101,32 @@ export const getNextEventDate = card => {
     if (frequency === 'once') {
       const month = date.toLocaleString('default', {month: 'long'});
       const day = date.toLocaleString('default', {day: 'numeric'});
-      const time = date.toLocaleString('default', {timeStyle: 'short'});
+      let hrs = date.getHours();
+      let ampm = 'AM';
+      if (hrs > 12) {
+        hrs -= 12;
+        ampm = 'PM';
+      }
+      let mins = date.getMinutes();
+      const time = `${hrs === 0 ? '12' : hrs}${
+        mins === 0 ? '' : `:${mins}`
+      } ${ampm}`;
       return `${month} ${day}, ${time}`;
     } else if (frequency === 'weekly') {
       let now = new Date();
       if (date > now) {
         const month = date.toLocaleString('default', {month: 'long'});
         const day = date.toLocaleString('default', {day: 'numeric'});
-        const time = date.toLocaleString('default', {timeStyle: 'short'});
+        let hrs = date.getHours();
+        let ampm = 'AM';
+        if (hrs > 12) {
+          hrs -= 12;
+          ampm = 'PM';
+        }
+        let mins = date.getMinutes();
+        const time = `${hrs === 0 ? '12' : hrs}${
+          mins === 0 ? '' : `:${mins}`
+        } ${ampm}`;
         return `${month} ${day}, ${time}`;
       } else {
         // date already passed, get the next date
@@ -118,7 +136,16 @@ export const getNextEventDate = card => {
         }
         const month = date.toLocaleString('default', {month: 'long'});
         const day = date.toLocaleString('default', {day: 'numeric'});
-        const time = date.toLocaleString('default', {timeStyle: 'short'});
+        let hrs = date.getHours();
+        let ampm = 'AM';
+        if (hrs > 12) {
+          hrs -= 12;
+          ampm = 'PM';
+        }
+        let mins = date.getMinutes();
+        const time = `${hrs === 0 ? '12' : hrs}${
+          mins === 0 ? '' : `:${mins}`
+        } ${ampm}`;
         return `${month} ${day}, ${time}`;
       }
     } else if (frequency === 'biweekly') {
@@ -126,7 +153,16 @@ export const getNextEventDate = card => {
       if (date > now) {
         const month = date.toLocaleString('default', {month: 'long'});
         const day = date.toLocaleString('default', {day: 'numeric'});
-        const time = date.toLocaleString('default', {timeStyle: 'short'});
+        let hrs = date.getHours();
+        let ampm = 'AM';
+        if (hrs > 12) {
+          hrs -= 12;
+          ampm = 'PM';
+        }
+        let mins = date.getMinutes();
+        const time = `${hrs === 0 ? '12' : hrs}${
+          mins === 0 ? '' : `:${mins}`
+        } ${ampm}`;
         return `${month} ${day}, ${time}`;
       } else {
         // date already passed, get the next date
@@ -136,7 +172,16 @@ export const getNextEventDate = card => {
         }
         const month = date.toLocaleString('default', {month: 'long'});
         const day = date.toLocaleString('default', {day: 'numeric'});
-        const time = date.toLocaleString('default', {timeStyle: 'short'});
+        let hrs = date.getHours();
+        let ampm = 'AM';
+        if (hrs > 12) {
+          hrs -= 12;
+          ampm = 'PM';
+        }
+        let mins = date.getMinutes();
+        const time = `${hrs === 0 ? '12' : hrs}${
+          mins === 0 ? '' : `:${mins}`
+        } ${ampm}`;
         return `${month} ${day}, ${time}`;
       }
     } else if (frequency) {
@@ -144,7 +189,16 @@ export const getNextEventDate = card => {
       if (date > now) {
         const month = date.toLocaleString('default', {month: 'long'});
         const day = date.toLocaleString('default', {day: 'numeric'});
-        const time = date.toLocaleString('default', {timeStyle: 'short'});
+        let hrs = date.getHours();
+        let ampm = 'AM';
+        if (hrs > 12) {
+          hrs -= 12;
+          ampm = 'PM';
+        }
+        let mins = date.getMinutes();
+        const time = `${hrs === 0 ? '12' : hrs}${
+          mins === 0 ? '' : `:${mins}`
+        } ${ampm}`;
         return `${month} ${day}, ${time}`;
       } else {
         // date already passed, get the next date
@@ -154,13 +208,31 @@ export const getNextEventDate = card => {
         }
         const month = date.toLocaleString('default', {month: 'long'});
         const day = date.toLocaleString('default', {day: 'numeric'});
-        const time = date.toLocaleString('default', {timeStyle: 'short'});
+        let hrs = date.getHours();
+        let ampm = 'AM';
+        if (hrs > 12) {
+          hrs -= 12;
+          ampm = 'PM';
+        }
+        let mins = date.getMinutes();
+        const time = `${hrs === 0 ? '12' : hrs}${
+          mins === 0 ? '' : `:${mins}`
+        } ${ampm}`;
         return `${month} ${day}, ${time}`;
       }
     } else {
       const month = date.toLocaleString('default', {month: 'long'});
       const day = date.toLocaleString('default', {day: 'numeric'});
-      const time = date.toLocaleString('default', {timeStyle: 'short'});
+      let hrs = date.getHours();
+      let ampm = 'AM';
+      if (hrs > 12) {
+        hrs -= 12;
+        ampm = 'PM';
+      }
+      let mins = date.getMinutes();
+      const time = `${hrs === 0 ? '12' : hrs}${
+        mins === 0 ? '' : `:${mins}`
+      } ${ampm}`;
       return `${month} ${day}, ${time}`;
     }
   }

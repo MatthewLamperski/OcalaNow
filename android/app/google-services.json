@@ -14,6 +14,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "28992864864-2a8uhv2td2fn3sfq8915p4177q4m45va.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ocalanow",
+            "certificate_hash": "32df62482ca90c972d3c37baf341dc083f145b04"
+          }
+        },
+        {
+          "client_id": "28992864864-jk17fklnmvumid75sgsle8bu802d75d0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ocalanow",
+            "certificate_hash": "a5faa1ea8c16b215efae606944ff90332b40519d"
+          }
+        },
+        {
           "client_id": "28992864864-q9tpe5akt1t1vaimq98fb8rm3fmmoaou.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
@@ -39,10 +55,10 @@
               "client_type": 3
             },
             {
-              "client_id": "28992864864-csugr25ribb0pe17e5fnvv9imr78fc6g.apps.googleusercontent.com",
+              "client_id": "28992864864-c5svuocqt30ls9lscdb1hojfteruqa3s.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.OcalaNow",
+                "bundle_id": "matthewlamperski.OcalaNow",
                 "app_store_id": "1566738476"
               }
             }

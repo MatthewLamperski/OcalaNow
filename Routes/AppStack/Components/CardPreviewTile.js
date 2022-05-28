@@ -33,13 +33,10 @@ const CardPreviewTile = ({
   scrollToTop,
   unsave,
 }) => {
-  const {currentLocation, setSaved, user, setUser, setError} =
-    useContext(AppContext);
+  const {currentLocation, setSaved, user, setError} = useContext(AppContext);
   const colorScheme = useColorScheme();
   const {colors} = useTheme();
   const [logo, setLogo] = useState();
-  const [loaded, setLoaded] = useState(false);
-  const [distanceBetween, setDistanceBetween] = useState();
   const fadeVal = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     setLogo();
@@ -47,7 +44,7 @@ const CardPreviewTile = ({
       .then(url => setLogo(url))
       .catch(err => console.log(err));
   }, [card.docID]);
-  const title = () => {
+  const title = useMemo(() => {
     switch (card.type) {
       case 'info':
         return card.title;
@@ -56,8 +53,8 @@ const CardPreviewTile = ({
       case 'event':
         return card.title;
     }
-  };
-  const subtitle = () => {
+  }, [card.type]);
+  const subtitle = useMemo(() => {
     switch (card.type) {
       case 'info':
         return card.subtitle;
@@ -66,29 +63,33 @@ const CardPreviewTile = ({
       case 'event':
         return card.subtitle;
     }
-  };
+  }, [card.type]);
   const getDistanceBetween = useMemo(() => {
-    const lat =
-      card.type === 'info'
-        ? card.data.company.location.coordinate.lat
-        : card.type === 'deal'
-        ? card.deal.company.location.coordinate.lat
-        : card.event.location.coordinate.lat;
-    const lng =
-      card.type === 'info'
-        ? card.data.company.location.coordinate.lng
-        : card.type === 'deal'
-        ? card.deal.company.location.coordinate.lng
-        : card.event.location.coordinate.lng;
-    return Number(
-      getDistance(
-        {lat, lng},
-        {lat: currentLocation.lat, lng: currentLocation.lng},
-      ) * 0.000621,
-    ).toFixed(1);
+    if (currentLocation) {
+      const lat =
+        card.type === 'info'
+          ? card.data.company.location.coordinate.lat
+          : card.type === 'deal'
+          ? card.deal.company.location.coordinate.lat
+          : card.event.location.coordinate.lat;
+      const lng =
+        card.type === 'info'
+          ? card.data.company.location.coordinate.lng
+          : card.type === 'deal'
+          ? card.deal.company.location.coordinate.lng
+          : card.event.location.coordinate.lng;
+      return Number(
+        getDistance(
+          {lat, lng},
+          {lat: currentLocation.lat, lng: currentLocation.lng},
+        ) * 0.000621,
+      ).toFixed(1);
+    } else {
+      return ' ';
+    }
   }, [card.docID]);
 
-  const location = () => {
+  const location = useMemo(() => {
     switch (card.type) {
       case 'info':
         return card.data.company.location.address;
@@ -97,16 +98,15 @@ const CardPreviewTile = ({
       case 'event':
         return card.event.location.name;
     }
-  };
-  const eventDate = card => {
+  }, [card.type]);
+  const eventDate = useMemo(() => {
     try {
-      const date = getNextEventDate(card);
-      return date;
+      return getNextEventDate(card);
     } catch (err) {
       console.log(card.docID, typeof card.event.startTime, err);
       return '';
     }
-  };
+  }, [card]);
   if (card) {
     return (
       <Pressable
@@ -218,7 +218,7 @@ const CardPreviewTile = ({
                   color={colorScheme === 'dark' ? 'white' : 'black'}
                 />
                 <Text shadow={3} fontWeight={300}>
-                  {eventDate(card)}
+                  {eventDate}
                 </Text>
               </HStack>
             )}
@@ -248,7 +248,7 @@ const CardPreviewTile = ({
               size={16}
             />
             <Text flex={1} numberOfLines={1} fontWeight={200}>
-              {location()}
+              {location}
             </Text>
           </HStack>
           <HStack
@@ -291,10 +291,10 @@ const CardPreviewTile = ({
           </HStack>
           <VStack mt={1} space={1}>
             <Text fontSize={18} fontWeight={300} numberOfLines={1}>
-              {title()}
+              {title}
             </Text>
             <Text fontSize={16} fontWeight={200}>
-              {subtitle()}
+              {subtitle}
             </Text>
           </VStack>
         </View>

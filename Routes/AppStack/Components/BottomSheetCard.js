@@ -1,4 +1,4 @@
-import React, {useContext, useEffect, useRef, useState} from 'react';
+import React, {useContext, useEffect, useMemo, useRef, useState} from 'react';
 import {
   Box,
   HStack,
@@ -33,6 +33,7 @@ import SocialLink from './SocialLink';
 import MapView, {Marker} from 'react-native-maps';
 import {useBottomTabBarHeight} from '@react-navigation/bottom-tabs';
 import analytics from '@react-native-firebase/analytics';
+import {darkMapStyle, lightMapStyle} from '../Discover';
 
 const BottomSheetCard = ({card, navigation, currentLocation}) => {
   const {colors} = useTheme();
@@ -98,12 +99,12 @@ const BottomSheetCard = ({card, navigation, currentLocation}) => {
   const getDistanceBetween = () => {
     return Number(
       getDistance(
-        {lat: lat(), lng: lng()},
+        {lat: lat, lng: lng},
         {lat: currentLocation.lat, lng: currentLocation.lng},
       ) * 0.000621,
     ).toFixed(1);
   };
-  const lat = () => {
+  const lat = useMemo(() => {
     switch (card.type) {
       case 'info':
         return card.data.company.location.coordinate.lat;
@@ -112,8 +113,8 @@ const BottomSheetCard = ({card, navigation, currentLocation}) => {
       case 'event':
         return card.event.location.coordinate.lat;
     }
-  };
-  const lng = () => {
+  }, [card.type]);
+  const lng = useMemo(() => {
     switch (card.type) {
       case 'info':
         return card.data.company.location.coordinate.lng;
@@ -122,7 +123,7 @@ const BottomSheetCard = ({card, navigation, currentLocation}) => {
       case 'event':
         return card.event.location.coordinate.lng;
     }
-  };
+  }, [card.type]);
 
   const phone = () => {
     switch (card.type) {
@@ -174,28 +175,30 @@ const BottomSheetCard = ({card, navigation, currentLocation}) => {
       const coordinates = currentLocation
         ? [
             {
-              latitude: lat(),
-              longitude: lng(),
+              latitude: lat,
+              longitude: lng,
             },
             {latitude: currentLocation.lat, longitude: currentLocation.lng},
           ]
         : [
             {
-              latitude: lat(),
-              longitude: lng(),
+              latitude: lat,
+              longitude: lng,
             },
           ];
-      mapRef.current.fitToCoordinates(coordinates, {
-        edgePadding: currentLocation
-          ? {top: 15, bottom: 15, left: 100, right: 100}
-          : {
-              top: 100,
-              bottom: 100,
-              left: 100,
-              right: 100,
-            },
-        animated: true,
-      });
+      requestAnimationFrame(() =>
+        mapRef.current.fitToCoordinates(coordinates, {
+          edgePadding: currentLocation
+            ? {top: 15, bottom: 15, left: 15, right: 15}
+            : {
+                top: 15,
+                bottom: 15,
+                left: 15,
+                right: 15,
+              },
+          animated: true,
+        }),
+      );
     }
   };
   return (
@@ -301,7 +304,7 @@ const BottomSheetCard = ({card, navigation, currentLocation}) => {
           )}
         </VStack>
       </HStack>
-      <View borderRadius={20} overflow="hidden" my={2} h={60}>
+      <View borderRadius={10} overflow="hidden" my={2} h={60}>
         <MapView
           onPress={() => {
             Alert.alert(
@@ -329,6 +332,8 @@ const BottomSheetCard = ({card, navigation, currentLocation}) => {
           scrollDuringRotateOrZoomEnabled={false}
           zoomTapEnabled={false}
           zoomControlEnabled={false}
+          showsMyLocationButton={false}
+          customMapStyle={colorScheme === 'dark' ? darkMapStyle : lightMapStyle}
           showsUserLocation
           ref={mapRef}
           style={{
@@ -336,13 +341,13 @@ const BottomSheetCard = ({card, navigation, currentLocation}) => {
             flex: 1,
           }}
           initialRegion={{
-            latitude: lat(),
-            longitude: lng(),
+            latitude: lat,
+            longitude: lng,
             latitudeDelta: 0.001,
             longitudeDelta: 0.001,
           }}
           onMapReady={fitToMarker}>
-          <Marker coordinate={{latitude: lat(), longitude: lng()}}>
+          <Marker coordinate={{latitude: lat, longitude: lng}}>
             <View
               display="flex"
               bg="primary.500"
